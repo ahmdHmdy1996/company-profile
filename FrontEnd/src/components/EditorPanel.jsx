@@ -1,0 +1,509 @@
+ÿþimport React, { useState } from "react";
+import { ChevronDown, ChevronRight, Palette, Type, Edit3, Plus, Trash2 } from "lucide-react";
+import { TEMPLATES } from "../templates/templateRegistry.jsx";
+
+export default function EditorPanel({ page, onUpdateData, onUpdateStyle }{
+  const [activeSection, setActiveSection] = useState("data");
+  const [expandedFields, setExpandedFields] = useState(new Set(["root"]));
+
+  if (!page || !page.templateId) {
+    return (
+      <div className="h-full flex items-center justify-center bg-white">
+        <div className="text-center p-4">
+          <div className="p-2 bg-white rounded-full w-fit mx-auto mb-2 border border-blue-200">
+            <Type size={20} className="text-blue-400" />
+          </div>
+          <div className="text-sm font-semibold text-blue-700 mb-1">
+            No Page Selected
+          </div>
+          <div className="text-xs text-blue-500">
+            Select a page to start editing
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const template = TEMPLATES[page.templateId];
+  if (!template{
+    return (
+      <div className="h-full flex items-center justify-center bg-white">
+        <div className="text-center p-4">
+          <div className="text-sm font-semibold text-blue-700 mb-1">
+            Template Not Found
+          </div>
+          <div className="text-xs text-blue-500">
+            Template ID: {page.templateId}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const toggleFieldExpansion = (fieldKey) => {
+    const newExpanded = new Set(expandedFields);
+    if (newExpanded.has(fieldKey){
+      newExpanded.delete(fieldKey);
+    } else {
+      newExpanded.add(fieldKey);
+    }
+    setExpandedFields(newExpanded);
+  };
+
+  return (
+    <div className="h-full flex flex-col bg-white  border border-gray-200 overflow-hidden">
+      {/* Header */}
+      <div className="p-3 bg-white border-b border-gray-200">
+        <div className="flex items-center gap-2 mb-1">
+          <div className="p-1 bg-blue-50 rounded border border-blue-200">
+            <Edit3 size={14} className="text-blue-600" />
+          </div>
+          <div>
+            <h2 className="text-sm font-semibold text-gray-800">Edit Page</h2>
+            <div className="text-xs text-gray-500">
+              Template:{" "}
+              <span className="font-medium text-blue-600">{template.name}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Section Tabs */}
+      <div className="flex bg-gray-50 border-b border-gray-200">
+        <button
+          onClick={(=> setActiveSection("data")}
+          className={`flex-1 px-3 py-2 text-xs font-medium transition-all relative ${
+            activeSection === "data"
+              ? "text-blue-600 bg-white"
+              : "text-gray-600 hover:text-gray-800 hover:bg-gray-100"
+          }`}
+        >
+          <div className="flex items-center justify-center gap-1">
+            <Type size={12} />
+            Content
+          </div>
+          {activeSection === "data" && (
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600" />
+          )}
+        </button>
+        <button
+          onClick={() => setActiveSection("style")}
+          className={`flex-1 px-3 py-2 text-xs font-medium transition-all relative ${
+            activeSection === "style"
+              ? "text-blue-600 bg-white"
+              : "text-gray-600 hover:text-gray-800 hover:bg-gray-100"
+          }`}
+        >
+          <div className="flex items-center justify-center gap-1">
+            <Palette size={12} />
+            Style
+          </div>
+          {activeSection === "style" && (
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600" />
+          )}
+        </button>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto p-3">
+        <div key={activeSection}>
+          {activeSection === "data" ? (
+            <DataEditor
+              data={page.data}
+              template={template}
+              onUpdate={onUpdateData}
+              expandedFields={expandedFields}
+              onToggleExpansion={toggleFieldExpansion}
+            />
+          : (
+            <StyleEditor
+              style={page.style || {}}
+              onUpdateStyle={onUpdateStyle}
+            />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DataEditor({
+  data,
+  template,
+  onUpdate,
+  expandedFields,
+  onToggleExpansion,
+}) {
+  const renderField = (field, value, onChange=> {
+    switch (field.type) {
+      case "text":
+      case "email":
+        return (
+          <input
+            type={field.type === "email" ? "email" : "text"}
+            value={value || ""}
+            onChange={(e) => onChange(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+            placeholder={field.placeholder}
+          />
+        );
+
+      case "textarea":
+        return (
+          <textarea
+            value={value || ""}
+            onChange={(e=> onChange(e.target.value)}
+            rows={3}
+            className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none"
+            placeholder={field.placeholder}
+          />
+        );
+
+      case "image":
+        return (
+          <div className="space-y-2">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files[0];
+                if (file{
+                  const reader = new FileReader();
+                  reader.onload = (event) => {
+                    onChange(event.target.result);
+                  };
+                  reader.readAsDataURL(file);
+                }
+              }}
+              className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+            />
+            {value && (
+              <div className="mt-2">
+                <img
+                  src={value}
+                  alt="Preview"
+                  className="max-w-full h-20 object-cover rounded border"
+                />
+              </div>
+            )}
+          </div>
+        );
+
+      case "repeater":
+        const items = value || [];
+        return (
+          <div className="space-y-3">
+            {items.map((item, index) => (
+              <div key={index} className="border border-gray-200 rounded p-3 bg-gray-50">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-sm font-medium text-gray-700">
+                    Item {index + 1}
+                  </span>
+                  <button
+                    onClick={() => {
+                      const newItems = items.filter((_, i) => i !== index);
+                      onChange(newItems);
+                    }}
+                    className="p-1 text-red-600 hover:bg-red-50 rounded"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+                <div className="space-y-2">
+                  {field.subFields?.map((subField) => (
+                    <div key={subField.key}>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                        {subField.label}
+                      </label>
+                      {renderField(
+                        subField,
+                        item[subField.key],
+                        (newValue) => {
+                          const newItems = [...items];
+                          newItems[index] = { ...item, [subField.key]: newValue };
+                          onChange(newItems);
+                        }
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+            <button
+              onClick={(=> {
+                const newItem = {};
+                field.subFields?.forEach((subField) => {
+                  newItem[subField.key] = "";
+                });
+                onChange([...items, newItem]);
+              }}
+              className="w-full p-2 border-2 border-dashed border-gray-300 rounded text-sm text-gray-600 hover:border-blue-400 hover:text-blue-600 flex items-center justify-center gap-2"
+            >
+              <Plus size={14} />
+              Add {field.label} Item
+            </button>
+          </div>
+        );
+
+      case "list":
+        const listItems = value || [];
+        return (
+          <div className="space-y-2">
+            {listItems.map((item, index=> (
+              <div key={index} className="flex gap-2">
+                <textarea
+                  value={item || ""}
+                  onChange={(e) => {
+                    const newItems = [...listItems];
+                    newItems[index] = e.target.value;
+                    onChange(newItems);
+                  }}
+                  rows={2}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                  placeholder={`${field.label} ${index + 1}`}
+                />
+                <button
+                  onClick={() => {
+                    const newItems = listItems.filter((_, i) => i !== index);
+                    onChange(newItems);
+                  }}
+                  className="p-2 text-red-600 hover:bg-red-50 rounded"
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            ))}
+            <button
+              onClick={(=> onChange([...listItems, ""])}
+              className="w-full p-2 border-2 border-dashed border-gray-300 rounded text-sm text-gray-600 hover:border-blue-400 hover:text-blue-600 flex items-center justify-center gap-2"
+            >
+              <Plus size={14} />
+              Add {field.label} Item
+            </button>
+          </div>
+        );
+
+      case "object":
+        const objectValue = value || {};
+        return (
+          <div className="space-y-3 border border-gray-200 rounded p-3 bg-gray-50">
+            {field.subFields?.map((subField) => (
+              <div key={subField.key}>
+                <label className="block text-xs font-medium text-gray-600 mb-1">
+                  {subField.label}
+                </label>
+                {renderField(
+                  subField,
+                  objectValue[subField.key],
+                  (newValue=> {
+                    const newObjectValue = { ...objectValue, [subField.key]: newValue };
+                    onChange(newObjectValue);
+                  }
+                )}
+              </div>
+            ))}
+          </div>
+        );
+
+      default:
+        return (
+          <input
+            type="text"
+            value={value || ""}
+            onChange={(e=> onChange(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+            placeholder={field.placeholder}
+          />
+        );
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      {template.fields.map((field=> (
+        <FieldItem
+          key={field.key}
+          field={field}
+          value={data[field.key]}
+          onChange={(newValue) => onUpdate({ ...data, [field.key]: newValue })}
+          expanded={expandedFields.has(field.key)}
+          onToggleExpansion={() => onToggleExpansion(field.key)}
+          renderField={renderField}
+        />
+      ))}
+    </div>
+  );
+}
+
+function FieldItem({
+  field,
+  value,
+  onChange,
+  expanded,
+  onToggleExpansion,
+  renderField,
+}{
+  return (
+    <div className="border border-gray-200 rounded p-3 bg-white">
+      <div
+        className="flex items-center justify-between cursor-pointer"
+        onClick={onToggleExpansion}
+      >
+        <label className="text-sm font-medium text-gray-800 flex items-center gap-2">
+          <div className="p-1 bg-blue-50 rounded">
+            {expanded ? (
+              <ChevronDown size={12} className="text-blue-600" />
+            : (
+              <ChevronRight size={12} className="text-blue-600" />
+            )}
+          </div>
+          {field.label}
+        </label>
+      </div>
+
+      {expanded && (
+        <div className="mt-3">{renderField(field, value, onChange)}</div>
+      )}
+    </div>
+  );
+}
+
+function StyleEditor({ style, onUpdateStyle }{
+  const handleImageUpload = (event=> {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e=> {
+        onUpdateStyle({
+          ...style,
+          backgroundImage: e.target.result,
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeBackgroundImage = () => {
+    onUpdateStyle({
+      ...style,
+      backgroundImage: null,
+    });
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="border border-gray-200 rounded p-4 bg-white">
+        <div className="flex items-center gap-2 mb-3">
+          <Palette size={16} className="text-blue-600" />
+          <h3 className="text-sm font-semibold text-gray-800">Background</h3>
+        </div>
+
+        <div className="space-y-3">
+          {/* Background Color */}
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">
+              Background Color
+            </label>
+            <input
+              type="color"
+              value={style.backgroundColor || "#000000"}
+              onChange={(e=>
+                onUpdateStyle({ ...style, backgroundColor: e.target.value })
+              }
+              className="w-full h-8 border border-gray-300 rounded cursor-pointer"
+            />
+          </div>
+
+          {/* Background Image */}
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-2">
+              Background Image
+            </label>
+
+            {style.backgroundImage ? (
+              <div className="space-y-2">
+                <div className="relative">
+                  <img
+                    src={style.backgroundImage}
+                    alt="Background preview"
+                    className="w-full h-24 object-cover rounded border border-gray-300"
+                  />
+                  <button
+                    onClick={removeBackgroundImage}
+                    className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600 transition-colors"
+                    title="Remove image"
+                  >
+                    Ã—
+                  </button>
+                </div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="w-full text-xs text-gray-600 file:mr-2 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-medium file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100"
+                />
+              </div>
+            : (
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="w-full text-xs text-gray-600 file:mr-2 file:py-2 file:px-3 file:rounded file:border-0 file:text-xs file:font-medium file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100 file:cursor-pointer"
+              />
+            )}
+          </div>
+
+          {/* Background Position (only show if image exists) */}
+          {style.backgroundImage && (
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">
+                Image Position
+              </label>
+              <select
+                value={style.backgroundPosition || "center"}
+                onChange={(e) =>
+                  onUpdateStyle({
+                    ...style,
+                    backgroundPosition: e.target.value,
+                  })
+                }
+                className="w-full px-2 py-1 border border-gray-300 rounded text-xs focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="center">Center</option>
+                <option value="top">Top</option>
+                <option value="bottom">Bottom</option>
+                <option value="left">Left</option>
+                <option value="right">Right</option>
+                <option value="top left">Top Left</option>
+                <option value="top right">Top Right</option>
+                <option value="bottom left">Bottom Left</option>
+                <option value="bottom right">Bottom Right</option>
+              </select>
+            </div>
+          )}
+
+          {/* Background Size (only show if image exists*/}
+          {style.backgroundImage && (
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">
+                Image Size
+              </label>
+              <select
+                value={style.backgroundSize || "cover"}
+                onChange={(e) =>
+                  onUpdateStyle({ ...style, backgroundSize: e.target.value })
+                }
+                className="w-full px-2 py-1 border border-gray-300 rounded text-xs focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="cover">Cover (fill)</option>
+                <option value="contain">Contain (fit)</option>
+                <option value="auto">Original Size</option>
+                <option value="100% 100%">Stretch</option>
+              </select>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
