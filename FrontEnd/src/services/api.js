@@ -20,7 +20,7 @@ class CompanyProfileAPI {
   // Get headers with authentication
   static getHeaders(includeAuth = true) {
     const headers = {
-      "Content-Type": "application/json",
+      
     };
 
     if (includeAuth) {

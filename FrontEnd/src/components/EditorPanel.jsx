@@ -1,8 +1,8 @@
-ÿþimport React, { useState } from "react";
-import { ChevronDown, ChevronRight, Palette, Type, Edit3, Plus, Trash2 } from "lucide-react";
+import React, { useState } from "react";
+import { ChevronDown, ChevronRight, Palette, Type, Edit3 } from "lucide-react";
 import { TEMPLATES } from "../templates/templateRegistry.jsx";
 
-export default function EditorPanel({ page, onUpdateData, onUpdateStyle }{
+export default function EditorPanel({ page, onUpdateData, onUpdateStyle }) {
   const [activeSection, setActiveSection] = useState("data");
   const [expandedFields, setExpandedFields] = useState(new Set(["root"]));
 
@@ -25,7 +25,7 @@ export default function EditorPanel({ page, onUpdateData, onUpdateStyle }{
   }
 
   const template = TEMPLATES[page.templateId];
-  if (!template{
+  if (!template) {
     return (
       <div className="h-full flex items-center justify-center bg-white">
         <div className="text-center p-4">
@@ -42,7 +42,7 @@ export default function EditorPanel({ page, onUpdateData, onUpdateStyle }{
 
   const toggleFieldExpansion = (fieldKey) => {
     const newExpanded = new Set(expandedFields);
-    if (newExpanded.has(fieldKey){
+    if (newExpanded.has(fieldKey)) {
       newExpanded.delete(fieldKey);
     } else {
       newExpanded.add(fieldKey);
@@ -51,7 +51,7 @@ export default function EditorPanel({ page, onUpdateData, onUpdateStyle }{
   };
 
   return (
-    <div className="h-full flex flex-col bg-white  border border-gray-200 overflow-hidden">
+    <div className="h-full flex flex-col bg-white rounded border border-gray-200 overflow-hidden">
       {/* Header */}
       <div className="p-3 bg-white border-b border-gray-200">
         <div className="flex items-center gap-2 mb-1">
@@ -71,7 +71,7 @@ export default function EditorPanel({ page, onUpdateData, onUpdateStyle }{
       {/* Section Tabs */}
       <div className="flex bg-gray-50 border-b border-gray-200">
         <button
-          onClick={(=> setActiveSection("data")}
+          onClick={() => setActiveSection("data")}
           className={`flex-1 px-3 py-2 text-xs font-medium transition-all relative ${
             activeSection === "data"
               ? "text-blue-600 bg-white"
@@ -115,7 +115,7 @@ export default function EditorPanel({ page, onUpdateData, onUpdateStyle }{
               expandedFields={expandedFields}
               onToggleExpansion={toggleFieldExpansion}
             />
-          : (
+          ) : (
             <StyleEditor
               style={page.style || {}}
               onUpdateStyle={onUpdateStyle}
@@ -134,7 +134,7 @@ function DataEditor({
   expandedFields,
   onToggleExpansion,
 }) {
-  const renderField = (field, value, onChange=> {
+  const renderField = (field, value, onChange) => {
     switch (field.type) {
       case "text":
       case "email":
@@ -152,7 +152,7 @@ function DataEditor({
         return (
           <textarea
             value={value || ""}
-            onChange={(e=> onChange(e.target.value)}
+            onChange={(e) => onChange(e.target.value)}
             rows={3}
             className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none"
             placeholder={field.placeholder}
@@ -167,7 +167,7 @@ function DataEditor({
               accept="image/*"
               onChange={(e) => {
                 const file = e.target.files[0];
-                if (file{
+                if (file) {
                   const reader = new FileReader();
                   reader.onload = (event) => {
                     onChange(event.target.result);
@@ -179,129 +179,13 @@ function DataEditor({
             />
             {value && (
               <div className="mt-2">
-                <img
-                  src={value}
-                  alt="Preview"
+                <img 
+                  src={value} 
+                  alt="Preview" 
                   className="max-w-full h-20 object-cover rounded border"
                 />
               </div>
             )}
-          </div>
-        );
-
-      case "repeater":
-        const items = value || [];
-        return (
-          <div className="space-y-3">
-            {items.map((item, index) => (
-              <div key={index} className="border border-gray-200 rounded p-3 bg-gray-50">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm font-medium text-gray-700">
-                    Item {index + 1}
-                  </span>
-                  <button
-                    onClick={() => {
-                      const newItems = items.filter((_, i) => i !== index);
-                      onChange(newItems);
-                    }}
-                    className="p-1 text-red-600 hover:bg-red-50 rounded"
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-                <div className="space-y-2">
-                  {field.subFields?.map((subField) => (
-                    <div key={subField.key}>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">
-                        {subField.label}
-                      </label>
-                      {renderField(
-                        subField,
-                        item[subField.key],
-                        (newValue) => {
-                          const newItems = [...items];
-                          newItems[index] = { ...item, [subField.key]: newValue };
-                          onChange(newItems);
-                        }
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-            <button
-              onClick={(=> {
-                const newItem = {};
-                field.subFields?.forEach((subField) => {
-                  newItem[subField.key] = "";
-                });
-                onChange([...items, newItem]);
-              }}
-              className="w-full p-2 border-2 border-dashed border-gray-300 rounded text-sm text-gray-600 hover:border-blue-400 hover:text-blue-600 flex items-center justify-center gap-2"
-            >
-              <Plus size={14} />
-              Add {field.label} Item
-            </button>
-          </div>
-        );
-
-      case "list":
-        const listItems = value || [];
-        return (
-          <div className="space-y-2">
-            {listItems.map((item, index=> (
-              <div key={index} className="flex gap-2">
-                <textarea
-                  value={item || ""}
-                  onChange={(e) => {
-                    const newItems = [...listItems];
-                    newItems[index] = e.target.value;
-                    onChange(newItems);
-                  }}
-                  rows={2}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none"
-                  placeholder={`${field.label} ${index + 1}`}
-                />
-                <button
-                  onClick={() => {
-                    const newItems = listItems.filter((_, i) => i !== index);
-                    onChange(newItems);
-                  }}
-                  className="p-2 text-red-600 hover:bg-red-50 rounded"
-                >
-                  <Trash2 size={14} />
-                </button>
-              </div>
-            ))}
-            <button
-              onClick={(=> onChange([...listItems, ""])}
-              className="w-full p-2 border-2 border-dashed border-gray-300 rounded text-sm text-gray-600 hover:border-blue-400 hover:text-blue-600 flex items-center justify-center gap-2"
-            >
-              <Plus size={14} />
-              Add {field.label} Item
-            </button>
-          </div>
-        );
-
-      case "object":
-        const objectValue = value || {};
-        return (
-          <div className="space-y-3 border border-gray-200 rounded p-3 bg-gray-50">
-            {field.subFields?.map((subField) => (
-              <div key={subField.key}>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
-                  {subField.label}
-                </label>
-                {renderField(
-                  subField,
-                  objectValue[subField.key],
-                  (newValue=> {
-                    const newObjectValue = { ...objectValue, [subField.key]: newValue };
-                    onChange(newObjectValue);
-                  }
-                )}
-              </div>
-            ))}
           </div>
         );
 
@@ -310,7 +194,7 @@ function DataEditor({
           <input
             type="text"
             value={value || ""}
-            onChange={(e=> onChange(e.target.value)}
+            onChange={(e) => onChange(e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
             placeholder={field.placeholder}
           />
@@ -320,7 +204,7 @@ function DataEditor({
 
   return (
     <div className="space-y-3">
-      {template.fields.map((field=> (
+      {template.fields.map((field) => (
         <FieldItem
           key={field.key}
           field={field}
@@ -342,7 +226,7 @@ function FieldItem({
   expanded,
   onToggleExpansion,
   renderField,
-}{
+}) {
   return (
     <div className="border border-gray-200 rounded p-3 bg-white">
       <div
@@ -353,7 +237,7 @@ function FieldItem({
           <div className="p-1 bg-blue-50 rounded">
             {expanded ? (
               <ChevronDown size={12} className="text-blue-600" />
-            : (
+            ) : (
               <ChevronRight size={12} className="text-blue-600" />
             )}
           </div>
@@ -368,12 +252,12 @@ function FieldItem({
   );
 }
 
-function StyleEditor({ style, onUpdateStyle }{
-  const handleImageUpload = (event=> {
+function StyleEditor({ style, onUpdateStyle }) {
+  const handleImageUpload = (event) => {
     const file = event.target.files[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = (e=> {
+      reader.onload = (e) => {
         onUpdateStyle({
           ...style,
           backgroundImage: e.target.result,
@@ -407,7 +291,7 @@ function StyleEditor({ style, onUpdateStyle }{
             <input
               type="color"
               value={style.backgroundColor || "#000000"}
-              onChange={(e=>
+              onChange={(e) =>
                 onUpdateStyle({ ...style, backgroundColor: e.target.value })
               }
               className="w-full h-8 border border-gray-300 rounded cursor-pointer"
@@ -430,25 +314,18 @@ function StyleEditor({ style, onUpdateStyle }{
                   />
                   <button
                     onClick={removeBackgroundImage}
-                    className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600 transition-colors"
-                    title="Remove image"
+                    className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
                   >
                     Ã—
                   </button>
                 </div>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="w-full text-xs text-gray-600 file:mr-2 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-medium file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100"
-                />
               </div>
-            : (
+            ) : (
               <input
                 type="file"
                 accept="image/*"
                 onChange={handleImageUpload}
-                className="w-full text-xs text-gray-600 file:mr-2 file:py-2 file:px-3 file:rounded file:border-0 file:text-xs file:font-medium file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100 file:cursor-pointer"
+                className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
               />
             )}
           </div>
@@ -482,7 +359,7 @@ function StyleEditor({ style, onUpdateStyle }{
             </div>
           )}
 
-          {/* Background Size (only show if image exists*/}
+          {/* Background Size (only show if image exists) */}
           {style.backgroundImage && (
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">
