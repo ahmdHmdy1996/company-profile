@@ -14,9 +14,10 @@ return new class extends Migration
         Schema::create('company_profiles', function (Blueprint $table) {
             $table->id();
             $table->string('template_id');
-            $table->json('data');
             $table->string('name')->nullable();
             $table->text('description')->nullable();
+            $table->longText('data')->change();
+            $table->foreignId('user_id')->after('id')->constrained()->onDelete('cascade');
             $table->timestamps();
             $table->softDeletes();
 
