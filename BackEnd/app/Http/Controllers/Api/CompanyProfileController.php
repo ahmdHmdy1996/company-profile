@@ -14,26 +14,41 @@ class CompanyProfileController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'template_id' => 'required|string',
-            'data' => 'required|array',
-            'name' => 'nullable|string|max:255',
-            'description' => 'nullable|string',
-        ]);
+        try {
+            $validated = $request->validate([
+                'template_id' => 'required|string|max:255',
+                'data' => 'required|array',
+                'name' => 'nullable|string|max:255',
+                'description' => 'nullable|string|max:1000',
+            ]);
 
-        $profile = CompanyProfile::create([
-            'user_id' => $request->user()->id,
-            'template_id' => $request->input('template_id'),
-            'data' => $request->input('data'),
-            'name' => $request->input('name'),
-            'description' => $request->input('description'),
-        ]);
+            $profile = CompanyProfile::create([
+                'user_id' => $request->user()->id,
+                'template_id' => $validated['template_id'],
+                'data' => $validated['data'],
+                'name' => $validated['name'] ?? null,
+                'description' => $validated['description'] ?? null,
+            ]);
 
-        return response()->json([
-            'success' => true,
-            'data' => $profile,
-            'message' => 'Company profile saved successfully'
-        ], 201);
+            return response()->json([
+                'success' => true,
+                'data' => $profile,
+                'message' => 'Company profile saved successfully'
+            ], 201);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to save company profile',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -41,14 +56,22 @@ class CompanyProfileController extends Controller
      */
     public function index(Request $request)
     {
-        $profile = CompanyProfile::where('user_id', $request->user()->id)
-            ->latest()
-            ->first();
+        try {
+            $profile = CompanyProfile::where('user_id', $request->user()->id)
+                ->latest()
+                ->first();
 
-        return response()->json([
-            'success' => true,
-            'data' => $profile
-        ]);
+            return response()->json([
+                'success' => true,
+                'data' => $profile
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve company profiles',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -56,13 +79,27 @@ class CompanyProfileController extends Controller
      */
     public function show(Request $request, $id)
     {
-        $profile = CompanyProfile::where('user_id', $request->user()->id)
-            ->findOrFail($id);
+        try {
+            $profile = CompanyProfile::where('user_id', $request->user()->id)
+                ->findOrFail($id);
 
-        return response()->json([
-            'success' => true,
-            'data' => $profile
-        ]);
+            return response()->json([
+                'success' => true,
+                'data' => $profile
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Company profile not found',
+                'error' => 'The requested company profile does not exist or you do not have permission to access it.'
+            ], 404);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve company profile',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -70,28 +107,49 @@ class CompanyProfileController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $profile = CompanyProfile::where('user_id', $request->user()->id)
-            ->findOrFail($id);
+        try {
+            $profile = CompanyProfile::where('user_id', $request->user()->id)
+                ->findOrFail($id);
 
-        $request->validate([
-            'template_id' => 'sometimes|string',
-            'data' => 'sometimes|array',
-            'name' => 'nullable|string|max:255',
-            'description' => 'nullable|string',
-        ]);
+            $validated = $request->validate([
+                'template_id' => 'sometimes|string|max:255',
+                'data' => 'sometimes|array',
+                'name' => 'nullable|string|max:255',
+                'description' => 'nullable|string|max:1000',
+            ]);
 
-        $profile->update([
-            'template_id' => $request->input('template_id', $profile->template_id),
-            'data' => $request->input('data', $profile->data),
-            'name' => $request->input('name', $profile->name),
-            'description' => $request->input('description', $profile->description),
-        ]);
+            $profile->update([
+                'template_id' => $validated['template_id'] ?? $profile->template_id,
+                'data' => $validated['data'] ?? $profile->data,
+                'name' => $validated['name'] ?? $profile->name,
+                'description' => $validated['description'] ?? $profile->description,
+            ]);
 
-        return response()->json([
-            'success' => true,
-            'data' => $profile,
-            'message' => 'Company profile updated successfully'
-        ]);
+            return response()->json([
+                'success' => true,
+                'data' => $profile,
+                'message' => 'Company profile updated successfully'
+            ]);
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Company profile not found',
+                'error' => 'The requested company profile does not exist or you do not have permission to access it.'
+            ], 404);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update company profile',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -99,26 +157,41 @@ class CompanyProfileController extends Controller
      */
     public function destroy(Request $request, $id)
     {
-        $profile = CompanyProfile::where('user_id', $request->user()->id)
-            ->findOrFail($id);
+        try {
+            $profile = CompanyProfile::where('user_id', $request->user()->id)
+                ->findOrFail($id);
 
-        // Delete associated images if they exist
-        if (is_array($profile->data)) {
-            if (isset($profile->data['logoImage'])) {
-                $logoPath = str_replace('/storage/', '', $profile->data['logoImage']);
-                Storage::disk('public')->delete($logoPath);
+            // Delete associated images if they exist
+            if (is_array($profile->data)) {
+                if (isset($profile->data['logoImage'])) {
+                    $logoPath = str_replace('/storage/', '', $profile->data['logoImage']);
+                    Storage::disk('public')->delete($logoPath);
+                }
+                if (isset($profile->data['backgroundImage'])) {
+                    $backgroundPath = str_replace('/storage/', '', $profile->data['backgroundImage']);
+                    Storage::disk('public')->delete($backgroundPath);
+                }
             }
-            if (isset($profile->data['backgroundImage'])) {
-                $backgroundPath = str_replace('/storage/', '', $profile->data['backgroundImage']);
-                Storage::disk('public')->delete($backgroundPath);
-            }
+
+            $profile->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Company profile deleted successfully'
+            ]);
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Company profile not found',
+                'error' => 'The requested company profile does not exist or you do not have permission to access it.'
+            ], 404);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete company profile',
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        $profile->delete();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Company profile deleted successfully'
-        ]);
     }
 }
