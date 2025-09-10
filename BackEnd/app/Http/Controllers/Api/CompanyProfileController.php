@@ -6,21 +6,18 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use App\Models\CompanyProfile;
+use App\Http\Requests\StoreCompanyProfileRequest;
+use App\Http\Requests\UpdateCompanyProfileRequest;
 
 class CompanyProfileController extends Controller
 {
     /**
      * Store a new company profile
      */
-    public function store(Request $request)
+    public function store(StoreCompanyProfileRequest $request)
     {
         try {
-            $validated = $request->validate([
-                'template_id' => 'required|string|max:255',
-                'data' => 'required|array',
-                'name' => 'nullable|string|max:255',
-                'description' => 'nullable|string|max:1000',
-            ]);
+            $validated = $request->validated();
 
             $profile = CompanyProfile::create([
                 'user_id' => $request->user()->id,
@@ -52,9 +49,41 @@ class CompanyProfileController extends Controller
     }
 
     /**
-     * Get the last updated company profile
+     * Get all company profiles for the authenticated user
      */
     public function index(Request $request)
+    {
+        try {
+            $perPage = $request->get('per_page', 10);
+            $profiles = CompanyProfile::where('user_id', $request->user()->id)
+                ->latest()
+                ->paginate($perPage);
+
+            return response()->json([
+                'success' => true,
+                'data' => $profiles->items(),
+                'pagination' => [
+                    'current_page' => $profiles->currentPage(),
+                    'last_page' => $profiles->lastPage(),
+                    'per_page' => $profiles->perPage(),
+                    'total' => $profiles->total(),
+                    'from' => $profiles->firstItem(),
+                    'to' => $profiles->lastItem()
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve company profiles',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get the last updated company profile
+     */
+    public function getLastProfile(Request $request)
     {
         try {
             $profile = CompanyProfile::where('user_id', $request->user()->id)
@@ -68,7 +97,7 @@ class CompanyProfileController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to retrieve company profiles',
+                'message' => 'Failed to retrieve last company profile',
                 'error' => $e->getMessage()
             ], 500);
         }
@@ -105,22 +134,28 @@ class CompanyProfileController extends Controller
     /**
      * Update a company profile
      */
-    public function update(Request $request, $id)
+    public function update(UpdateCompanyProfileRequest $request, $id)
     {
         try {
             $profile = CompanyProfile::where('user_id', $request->user()->id)
                 ->findOrFail($id);
 
-            $validated = $request->validate([
-                'template_id' => 'sometimes|string|max:255',
-                'data' => 'sometimes|array',
-                'name' => 'nullable|string|max:255',
-                'description' => 'nullable|string|max:1000',
-            ]);
+            $validated = $request->validated();
+
+            // Merge data instead of replacing it completely
+            $currentData = $profile->data ?? [];
+            $newData = $validated['data'] ?? [];
+            
+            // If new data contains page updates, merge them with existing data
+            if (isset($validated['data'])) {
+                $mergedData = array_merge($currentData, $newData);
+            } else {
+                $mergedData = $currentData;
+            }
 
             $profile->update([
                 'template_id' => $validated['template_id'] ?? $profile->template_id,
-                'data' => $validated['data'] ?? $profile->data,
+                'data' => $mergedData,
                 'name' => $validated['name'] ?? $profile->name,
                 'description' => $validated['description'] ?? $profile->description,
             ]);

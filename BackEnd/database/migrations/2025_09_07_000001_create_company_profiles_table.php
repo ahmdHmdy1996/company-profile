@@ -13,11 +13,11 @@ return new class extends Migration
     {
         Schema::create('company_profiles', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('template_id');
             $table->string('name')->nullable();
             $table->text('description')->nullable();
-            $table->longText('data')->change();
-            $table->foreignId('user_id')->after('id')->constrained()->onDelete('cascade');
+            $table->longText('data')->nullable();
             $table->timestamps();
             $table->softDeletes();
 

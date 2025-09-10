@@ -73,13 +73,33 @@ export const useTemplateData = (profileId = null) => {
         if (!transformedData.About) {
           transformedData.About = {
             data: {
-              title: "about\nus.",
-              paragraphs: [
-                "Team Arabia Company is recognized as one of the market leader in MEP Testing & Commissioning services, we've been exceeding and meeting the standards of the industry since we have started.",
-              ],
-              heroCaption: "Engineering excellence",
+              title: "About\nUs",
+              vision: {
+                title: "Our Vision",
+                content: "Team Arabia's vision is to continue advancing our roles as leaders in the industry and develop strong relationships with all our skilled employees and esteemed clients. Integrity, trust, and performance guide us on our journey to become the standard in our field."
+              },
+              coreValues: {
+                title: "Core Values",
+                content: "At Team Arabia, we have five core values that define us and guide us through our routine work as well as in addressing your project requirements. These values include:",
+                values: [
+                  "Clients and Partnership",
+                  "People and Teamwork",
+                  "Dedication",
+                  "Continuous Improvement",
+                  "Quality and Professional Safety"
+                ]
+              },
+              company: {
+                title: "The Company",
+                content: "Team Arabia is recognized as one of the leading companies in the market for MEP systems testing and commissioning services. We have been exceeding and meeting industry standards since we started. We aim to provide easy, affordable, and fast services to our clients with the goal of restoring the environment to its natural state."
+              },
+              images: {
+                topImage: null,
+                middleImage: null,
+                bottomImage: null
+              }
             },
-            style: { backgroundColor: "#1e40af", backgroundImage: null }
+            style: { backgroundColor: "#16a34a", backgroundImage: null }
           };
         }
         
@@ -148,8 +168,10 @@ export const useTemplateData = (profileId = null) => {
         description: data.Cover?.data?.subtitle || "Company description",
         website: data.Cover?.data?.website || "",
         logo_url: data.Cover?.data?.logoImage || null,
-        about_paragraphs: data.About?.data?.paragraphs || [],
-        hero_caption: data.About?.data?.heroCaption || "",
+        about_vision: data.About?.data?.vision || {},
+        about_core_values: data.About?.data?.coreValues || {},
+        about_company: data.About?.data?.company || {},
+        about_images: data.About?.data?.images || {},
         staff_members: data.Staff?.data?.staff || [],
         content_sections: data.Content?.data?.sections || [],
         toc_items: data.TOC?.data?.items || [],

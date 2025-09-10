@@ -163,6 +163,7 @@ function getTemplatePreviewColor(templateId) {
     about: "#1e40af",
     staff: "#f8fafc",
     content: "#244d86",
+    projects: "#ffffff",
   };
   return colors[templateId] || "#000000";
 }

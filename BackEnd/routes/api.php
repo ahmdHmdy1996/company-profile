@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\Api\CompanyProfileController;
+use App\Http\Controllers\Api\AttachmentController;
 use App\Http\Controllers\Api\AuthController;
 
 
@@ -18,12 +19,18 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Company Profile API Routes (protected)
     Route::prefix('company-profiles')->group(function () {
-        Route::get('/', [CompanyProfileController::class, 'index']);
+        Route::get('/', [CompanyProfileController::class, 'index']); // Get all profiles with pagination
+        Route::get('/last', [CompanyProfileController::class, 'getLastProfile']); // Get last profile
         Route::post('/', [CompanyProfileController::class, 'store']);
         Route::get('/{id}', [CompanyProfileController::class, 'show']);
         Route::put('/{id}', [CompanyProfileController::class, 'update']);
         Route::delete('/{id}', [CompanyProfileController::class, 'destroy']);
     });
+
+    // Attachment routes
+    Route::apiResource('attachments', AttachmentController::class);
+    Route::get('attachments/{attachment}/download', [AttachmentController::class, 'download'])->name('attachments.download');
+    Route::post('attachments/reorder', [AttachmentController::class, 'reorder'])->name('attachments.reorder');
 
     // Image upload endpoint (protected)
     Route::post('/upload-image', function (Request $request) {

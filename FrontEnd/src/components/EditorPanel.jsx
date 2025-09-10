@@ -134,6 +134,13 @@ function DataEditor({
   expandedFields,
   onToggleExpansion,
 }) {
+  // Debug logging
+  console.log('DataEditor Debug:', {
+    template: template,
+    templateFields: template?.fields,
+    data: data,
+    expandedFields: expandedFields
+  });
   const renderField = (field, value, onChange) => {
     switch (field.type) {
       case "text":
@@ -159,6 +166,48 @@ function DataEditor({
           />
         );
 
+      case "list": {
+        const items = Array.isArray(value) ? value : [];
+        const updateItem = (idx, val) => {
+          const next = [...items];
+          next[idx] = val;
+          onChange(next);
+        };
+        const addItem = () => onChange([...items, ""]);
+        const removeItem = (idx) => {
+          const next = items.filter((_, i) => i !== idx);
+          onChange(next);
+        };
+        return (
+          <div className="space-y-2">
+            {items.map((item, idx) => (
+              <div key={idx} className="flex items-start gap-2">
+                <textarea
+                  value={item || ""}
+                  onChange={(e) => updateItem(idx, e.target.value)}
+                  rows={2}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                />
+                <button
+                  type="button"
+                  onClick={() => removeItem(idx)}
+                  className="px-2 py-1 text-xs bg-red-50 text-red-600 border border-red-200 rounded hover:bg-red-100"
+                >
+                  Remove
+                </button>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={addItem}
+              className="px-3 py-1 text-xs bg-blue-50 text-blue-700 border border-blue-200 rounded hover:bg-blue-100"
+            >
+              + Add Item
+            </button>
+          </div>
+        );
+      }
+
       case "image":
         return (
           <div className="space-y-2">
@@ -179,15 +228,132 @@ function DataEditor({
             />
             {value && (
               <div className="mt-2">
-                <img 
-                  src={value} 
-                  alt="Preview" 
+                <img
+                  src={value}
+                  alt="Preview"
                   className="max-w-full h-20 object-cover rounded border"
                 />
               </div>
             )}
           </div>
         );
+
+      case "object": {
+        const obj =
+          value && typeof value === "object" && !Array.isArray(value)
+            ? value
+            : {};
+        const handleSubChange = (key, subVal) => {
+          onChange({ ...obj, [key]: subVal });
+        };
+        return (
+          <div className="space-y-3">
+            {(field.subFields || []).map((sub) => (
+              <div
+                key={sub.key}
+                className="border border-gray-200 rounded p-2 bg-white"
+              >
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  {sub.label}
+                </label>
+                {renderField(sub, obj[sub.key], (nv) =>
+                  handleSubChange(sub.key, nv)
+                )}
+              </div>
+            ))}
+          </div>
+        );
+      }
+
+      case "repeater": {
+        const items = Array.isArray(value) ? value : [];
+        console.log('Repeater Debug:', {
+          field: field,
+          value: value,
+          items: items,
+          subFields: field.subFields
+        });
+        const addItem = () => {
+          const blank = {};
+          (field.subFields || []).forEach((sf) => {
+            if (sf && sf.key) {
+              blank[sf.key] = sf.type === "image" ? null : "";
+            }
+          });
+          onChange([...items, blank]);
+        };
+        const updateItem = (idx, key, val) => {
+          const next = items.map((it, i) => {
+            if (i === idx) {
+              const item = it || {};
+              return { ...item, [key]: val };
+            }
+            return it;
+          });
+          onChange(next);
+        };
+        const removeItem = (idx) => {
+          const next = items.filter((_, i) => i !== idx);
+          onChange(next);
+        };
+        return (
+          <div className="space-y-3">
+            {items.map((item, idx) => {
+              console.log(`Repeater Item ${idx} Debug:`, {
+                item: item,
+                itemType: typeof item,
+                itemKeys: item ? Object.keys(item) : 'item is null/undefined'
+              });
+              return (
+              <div
+                key={idx}
+                className="border border-gray-200 rounded p-2 bg-white"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-xs font-semibold text-gray-700">
+                    Item {idx + 1}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removeItem(idx)}
+                    className="px-2 py-0.5 text-xs bg-red-50 text-red-600 border border-red-200 rounded hover:bg-red-100"
+                  >
+                    Remove
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 gap-2">
+                  {(field.subFields || []).map((sub) => {
+                    console.log(`SubField Debug for item ${idx}:`, {
+                      sub: sub,
+                      subKey: sub.key,
+                      itemValue: item?.[sub.key],
+                      item: item
+                    });
+                    return (
+                    <div key={sub.key} className="">
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        {sub.label}
+                      </label>
+                      {renderField(sub, item?.[sub.key] || "", (nv) =>
+                        updateItem(idx, sub.key, nv)
+                      )}
+                    </div>
+                    );
+                  })}
+                </div>
+              </div>
+              );
+            })}
+            <button
+              type="button"
+              onClick={addItem}
+              className="px-3 py-1 text-xs bg-blue-50 text-blue-700 border border-blue-200 rounded hover:bg-blue-100"
+            >
+              + Add Item
+            </button>
+          </div>
+        );
+      }
 
       default:
         return (
@@ -202,14 +368,23 @@ function DataEditor({
     }
   };
 
+  // Safety check for template
+  if (!template || !template.fields) {
+    return (
+      <div className="text-center p-4 text-gray-500">
+        <div className="text-sm">Template configuration not available</div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-3">
-      {template.fields.map((field) => (
+      {template.fields.filter(field => field && field.key).map((field) => (
         <FieldItem
           key={field.key}
           field={field}
-          value={data[field.key]}
-          onChange={(newValue) => onUpdate({ ...data, [field.key]: newValue })}
+          value={data ? data[field.key] : undefined}
+          onChange={(newValue) => onUpdate({ ...(data || {}), [field.key]: newValue })}
           expanded={expandedFields.has(field.key)}
           onToggleExpansion={() => onToggleExpansion(field.key)}
           renderField={renderField}
@@ -227,6 +402,15 @@ function FieldItem({
   onToggleExpansion,
   renderField,
 }) {
+  // Safety check for field
+  if (!field) {
+    return (
+      <div className="border border-red-200 rounded p-3 bg-red-50">
+        <div className="text-sm text-red-600">Invalid field configuration</div>
+      </div>
+    );
+  }
+
   return (
     <div className="border border-gray-200 rounded p-3 bg-white">
       <div
@@ -241,7 +425,7 @@ function FieldItem({
               <ChevronRight size={12} className="text-blue-600" />
             )}
           </div>
-          {field.label}
+          {field.label || 'Unnamed Field'}
         </label>
       </div>
 

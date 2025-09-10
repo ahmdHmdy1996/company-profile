@@ -1,4 +1,7 @@
-import React from "react";
+import React from 'react';
+import CustomHeader from '../components/CustomHeader';
+import CustomFooter from '../components/CustomFooter';
+import InlineEditor from '../components/InlineEditor';
 
 // Background component for templates
 function Background({
@@ -49,12 +52,12 @@ function OrgCard({ person, variant = "filled", size = "md" }) {
 // Helper function to merge API data with template defaults
 export const mergeTemplateData = (templateId, apiData, defaultData) => {
   if (!apiData) return defaultData;
-  
+
   // Extract template-specific data from nested structure
   const templateData = apiData[templateId] || apiData;
-  
+
   switch (templateId) {
-    case 'Cover':
+    case "Cover":
       return {
         headline: templateData.headline || defaultData.headline,
         subtitle: templateData.subtitle || defaultData.subtitle,
@@ -62,30 +65,58 @@ export const mergeTemplateData = (templateId, apiData, defaultData) => {
         logoText: templateData.logoText || defaultData.logoText,
         logoImage: templateData.logoImage || defaultData.logoImage,
       };
-    case 'About':
+    case "About":
       return {
         title: templateData.title || defaultData.title,
-        paragraphs: templateData.paragraphs && templateData.paragraphs.length > 0 ? templateData.paragraphs : defaultData.paragraphs,
+        paragraphs:
+          templateData.paragraphs && templateData.paragraphs.length > 0
+            ? templateData.paragraphs
+            : defaultData.paragraphs,
         heroCaption: templateData.heroCaption || defaultData.heroCaption,
       };
-    case 'Staff':
+    case "Staff":
       return {
         title: templateData.title || defaultData.title,
         subtitle: templateData.subtitle || defaultData.subtitle,
         ceo: templateData.ceo || defaultData.ceo,
-        managers: templateData.managers && templateData.managers.length > 0 ? templateData.managers : defaultData.managers,
-        staff: templateData.staff && templateData.staff.length > 0 ? templateData.staff : defaultData.staff,
-        juniorStaff: templateData.juniorStaff && templateData.juniorStaff.length > 0 ? templateData.juniorStaff : defaultData.juniorStaff,
+        managers:
+          templateData.managers && templateData.managers.length > 0
+            ? templateData.managers
+            : defaultData.managers,
+        staff:
+          templateData.staff && templateData.staff.length > 0
+            ? templateData.staff
+            : defaultData.staff,
+        juniorStaff:
+          templateData.juniorStaff && templateData.juniorStaff.length > 0
+            ? templateData.juniorStaff
+            : defaultData.juniorStaff,
       };
-    case 'Content':
+    case "Content":
       return {
         title: templateData.title || defaultData.title,
-        sections: templateData.sections && templateData.sections.length > 0 ? templateData.sections : defaultData.sections,
+        sections:
+          templateData.sections && templateData.sections.length > 0
+            ? templateData.sections
+            : defaultData.sections,
       };
-    case 'TOC':
+    case "TOC":
       return {
-        items: templateData.items && templateData.items.length > 0 ? templateData.items : defaultData.items,
+        items:
+          templateData.items && templateData.items.length > 0
+            ? templateData.items
+            : defaultData.items,
         heading: templateData.heading || defaultData.heading,
+      };
+    case "Projects":
+      return {
+        title: templateData.title || defaultData.title,
+        projects:
+          templateData.projects && templateData.projects.length > 0
+            ? templateData.projects
+            : defaultData.projects,
+        currentPage: templateData.currentPage || defaultData.currentPage,
+        totalPages: templateData.totalPages || defaultData.totalPages,
       };
     default:
       return { ...defaultData, ...apiData };
@@ -103,35 +134,50 @@ export const TEMPLATES = {
       website: "www.name.com",
       logoText: "company name",
       logoImage: null,
+      showHeader: true
     },
-    Component: ({ data, style }) => (
-      <div className="relative w-full h-[1123px] overflow-hidden">
+    Component: ({ data, style, globalSettings, isEditing = false, onDataChange, isRTL = false, currentLanguage = 'ar' }) => {
+      return (
+        <div className={`relative w-full min-h-screen bg-white flex flex-col ${isRTL ? 'text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
         <Background style={style} fallbackColor="#1a1a1a" />
         
-        {/* Logo Section */}
-        <div className="absolute top-8 left-8 z-10">
-          <div className="flex items-center gap-3 mb-2">
-            {data.logoImage ? (
-              <img 
-                src={data.logoImage} 
-                alt="Company Logo" 
-                className="w-10 h-10 object-contain"
-              />
-            ) : (
-              <div className="w-10 h-10 flex items-center justify-center">
-                <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M3 3h6v6H3V3zm8 0h6v6h-6V3zm8 0h6v6h-6V3zM3 11h6v6H3v-6zm8 0h6v6h-6v-6zm8 0h6v6h-6v-6zM3 19h6v6H3v-6zm8 0h6v6h-6v-6zm8 0h6v6h-6v-6z"/>
-                </svg>
-              </div>
-            )}
+        {/* Custom Header */}
+        <CustomHeader 
+          pageName={data.headline || "Company Profile"}
+          globalSettings={globalSettings}
+          showHeader={data.showHeader !== false}
+        />
+
+        {/* Logo Section - only show if header is hidden */}
+        {data.showHeader === false && (
+          <div className="absolute top-8 left-8 z-10">
+            <div className="flex items-center gap-3 mb-2">
+              {data.logoImage ? (
+                <img
+                  src={data.logoImage}
+                  alt="Company Logo"
+                  className="w-10 h-10 object-contain"
+                />
+              ) : (
+                <div className="w-10 h-10 flex items-center justify-center">
+                  <svg
+                    className="w-8 h-8 text-white"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M3 3h6v6H3V3zm8 0h6v6h-6V3zm8 0h6v6h-6V3zM3 11h6v6H3v-6zm8 0h6v6h-6v-6zm8 0h6v6h-6v-6zM3 19h6v6H3v-6zm8 0h6v6h-6v-6zm8 0h6v6h-6v-6z" />
+                  </svg>
+                </div>
+              )}
+            </div>
+            <div className="text-white text-sm font-medium tracking-wide">
+              {data.logoText || "company name"}
+            </div>
           </div>
-          <div className="text-white text-sm font-medium tracking-wide">
-            {data.logoText || "company name"}
-          </div>
-        </div>
+        )}
 
         {/* Main Content */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
+        <div className="flex-1 flex flex-col items-center justify-center z-10 relative">
           <h1 className="text-white font-bold text-8xl leading-none text-center whitespace-pre-line mb-8">
             {data.headline || "company\nprofile"}
           </h1>
@@ -140,13 +186,24 @@ export const TEMPLATES = {
           </div>
         </div>
 
-        {/* Website Footer */}
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-white text-lg font-medium z-10">
-          {data.website || "www.name.com"}
+        {/* Website Footer - only show if header is hidden */}
+        {data.showHeader === false && (
+          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-white text-lg font-medium z-10">
+            {data.website || "www.name.com"}
+          </div>
+        )}
+        
+        {/* Custom Footer */}
+        <CustomFooter 
+          pageNumber={1}
+          totalPages={244}
+          globalSettings={globalSettings}
+        />
         </div>
-      </div>
-    ),
+      );
+    },
     fields: [
+      { key: "showHeader", label: "Show Header", type: "checkbox", defaultValue: true },
       { key: "headline", label: "Headline", type: "textarea" },
       { key: "subtitle", label: "Subtitle" },
       { key: "website", label: "Website" },
@@ -166,39 +223,44 @@ export const TEMPLATES = {
         { title: "Contact" },
         { title: "Appendix" },
       ],
+      showHeader: true
     },
-    Component: ({ data, style }) => (
-      <div className="relative w-full h-[1123px]">
-        <Background
-          style={style}
-          fallbackColor="#3b82f6"
-        />
-        <div className="absolute inset-0 flex flex-col text-white px-16 pt-16">
+    Component: ({ data, style, globalSettings, isEditing = false, onDataChange, isRTL = false, currentLanguage = 'ar' }) => (
+      <div className={`relative w-full min-h-screen aspect-[210/297] flex flex-col ${isRTL ? 'text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+        <Background style={style} fallbackColor="#3b82f6" />
+        <div className="flex-1 flex flex-col text-white px-16 pt-16">
           {/* Title */}
           <div className="text-center mb-12">
             <h1 className="text-white font-light text-5xl mb-4 opacity-80">
               table
             </h1>
-            <h2 className="text-white font-light text-6xl">
-              of contents
-            </h2>
+            <h2 className="text-white font-light text-6xl">of contents</h2>
           </div>
 
           {/* Content Items */}
           <div className="flex justify-center max-w-4xl mx-auto w-full relative">
             {/* Vertical Line */}
-            <div className="absolute left-1/2 transform -translate-x-1/2 w-0.5 bg-amber-400 opacity-60" style={{height: `${(data.items || []).length * 120}px`}}></div>
-            
+            <div
+              className="absolute left-1/2 transform -translate-x-1/2 w-0.5 bg-amber-400 opacity-60"
+              style={{ height: `${(data.items || []).length * 120}px` }}
+            ></div>
+
             <div className="flex flex-col w-full">
               {(data.items || []).map((item, index) => (
                 <div key={index} className="relative">
                   {/* Item Row */}
-                  <div className={`flex items-center py-8 ${index % 2 === 0 ? 'justify-start pr-8' : 'justify-end pl-8'}`}>
+                  <div
+                    className={`flex items-center py-8 ${
+                      index % 2 === 0
+                        ? "justify-start pr-8"
+                        : "justify-end pl-8"
+                    }`}
+                  >
                     {index % 2 === 0 ? (
                       // Left aligned (even indices)
                       <div className="flex items-center mr-8">
                         <div className="text-amber-400 font-bold text-5xl mr-6">
-                          {String(index + 1).padStart(2, '0')}
+                          {String(index + 1).padStart(2, "0")}
                         </div>
                         <div className="text-white text-2xl font-light">
                           {item.title}
@@ -211,7 +273,7 @@ export const TEMPLATES = {
                           {item.title}
                         </div>
                         <div className="text-amber-400 font-bold text-5xl ml-6">
-                          {String(index + 1).padStart(2, '0')}
+                          {String(index + 1).padStart(2, "0")}
                         </div>
                       </div>
                     )}
@@ -228,57 +290,211 @@ export const TEMPLATES = {
         key: "items",
         label: "Items",
         type: "repeater",
-        subFields: [
-          { key: "title", label: "Title" },
-        ],
+        subFields: [{ key: "title", label: "Title" }],
       },
     ],
   },
   About: {
     id: "about",
-    name: "About Us (Two‑Column)",
+    name: "About Us (Enhanced)",
     defaultData: {
-      title: "about\nus.",
-      paragraphs: [
-        "Team Arabia Company is recognized as one of the market leader in MEP Testing & Commissioning services, we've been exceeding and meeting the standards of the industry since we have started.",
-        "We aim to offer our clients with the easiest, cheapest, and quickest service possible with the aim of restoring the environment to normal. Our background and experience in energy efficiency are exceedingly superb.",
-        "Team Arabia Company 2006 Since our establishment in has aimed at meeting the needs of specialized and professional engineering services to our clients by continually improving the quality of the building environment which manages the entire process perfectly.",
-        "We have offered various services to our clients such as commissioning management services for new construction buildings, HVAC Testing and Balancing (TAB), LEED Commissioning Agents, operation and maintenance (O&M) manual, duct cleaning, and improvement of energy efficiency to meet our clients and owners' goals. We care for our clients and aim at offering them the best services. We can produce outcomes and develop long term relationships with our clients.",
-        "By working with us, you can reduce the risk of operational problems and ensure higher quality control and plant efficiency.",
-        "Team Arabia Company is based in Riyadh, Saudi Arabia. It's dynamic and has the enlighten expertise, solid foundations, and the regional reach required for delivering optimal results and professional services to the rapidly growing sectors in Saudi Arabia. This will help to minimize the energy expenses for our clients.",
-        "We firmly believe that energy will always remain to be an essential issue to humankind since its conversion helps us to preserve the natural environment, although energy inefficiency tends to de"
-      ],
-      heroCaption: "Engineering excellence",
+      title: "About\nUs",
+      vision: {
+        title: "Our Vision",
+        content: "Team Arabia's vision is to continue advancing our roles as leaders in the industry and develop strong relationships with all our skilled employees and esteemed clients. Integrity, trust, and performance drive us towards our journey of becoming the benchmark within our field."
+      },
+      coreValues: {
+        title: "Core Values",
+        content: "At Team Arabia, we have five core values that define us and guide us through our routine work as well as in addressing your project requirements. These values include:",
+        values: [
+          "Clients & Partnership",
+          "People & Teamwork",
+          "Dedication",
+          "Continuous Improvement",
+          "Quality & Professional Safety"
+        ]
+      },
+      company: {
+        title: "The Company",
+        content: "Our clients are our partners, and this is precisely why we are fully committed to ensuring customer satisfaction. Additionally, we focus on developing partnerships with leading companies and individuals to provide you with added value.\n\nOur members are the catalyst for our prosperity and our greatest assets. We retain and recruit the best, and foster teamwork that results in excellent performance. We provide motivation and opportunities to help our talents discover their true capabilities.\n\nOur dedication to delivering high-quality standards, full compliance with project requirements, and on-time delivery is tangible. We are dedicated to providing TAB (Testing and Balancing) services to ensure that the HVAC (Heating, Ventilation, and Air Conditioning) system provides maximum comfort for building occupants using the lowest possible energy cost.\n\nTo become the leader in our field, we are driven to continuously improve our operations, communication, structure, and approach to construction challenges. We embrace the latest trends and technologies while building on proven methods.\n\nOur rapidly advancing business depends on maintaining and achieving quality and health/safety standards and procedures. At Team Arabia, we consider health and safety requirements in the work environment to be of paramount importance. This is reflected through the absence of any reportable incidents in all operations we have participated in so far."
+      },
+      images: {
+        topImage: null,
+        middleImage: null,
+        bottomImage: null
+      },
+      showHeader: true
     },
-    Component: ({ data, style }) => (
-      <div className="relative w-full h-[1123px] flex">
-        <div className="w-1/2 p-12 bg-white flex flex-col">
-          <h2 className="text-blue-900 font-bold text-6xl leading-tight whitespace-pre-line mb-8">
-            {data.title}
-          </h2>
-          <div className="flex-1 space-y-4 text-gray-700 text-base leading-relaxed overflow-hidden">
-            {(data.paragraphs || []).map((para, i) => (
-              <p key={i} className="text-justify">{para}</p>
+    Component: ({ data, style, globalSettings, isEditing = false, onDataChange, isRTL = false, currentLanguage = 'ar' }) => (
+      <div className={`relative w-full min-h-full bg-white flex flex-col ${isRTL ? 'text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+        {/* Custom Header */}
+        <CustomHeader 
+          pageName="About"
+          globalSettings={globalSettings}
+          showHeader={data.showHeader !== false}
+        />
+
+        {/* Main Content */}
+        <div className="flex-1">
+        {/* Top Image */}
+        {data.images?.topImage && (
+          <div className="px-12 mb-8">
+            <img 
+              src={data.images.topImage} 
+              alt="Top Image" 
+              className="w-full h-64 object-cover rounded-lg shadow-lg"
+            />
+          </div>
+        )}
+
+        {/* Vision Section */}
+        <div className="px-12 mb-8">
+          <div className="border-l-4 border-green-600 pl-6">
+            <InlineEditor
+              value={data.vision?.title}
+              onChange={(value) => onDataChange?.({ ...data, vision: { ...data.vision, title: value } })}
+              className="text-2xl font-bold text-gray-800 mb-4"
+              placeholder="Vision Title"
+              isEditing={isEditing}
+              showLanguageSelector={true}
+            />
+          </div>
+          <InlineEditor
+            value={data.vision?.content}
+            onChange={(value) => onDataChange?.({ ...data, vision: { ...data.vision, content: value } })}
+            className="text-gray-700 leading-relaxed text-justify px-12"
+            placeholder="Vision Description"
+            multiline={true}
+            isEditing={isEditing}
+            showLanguageSelector={true}
+          />
+        </div>
+
+        {/* Middle Image */}
+        {data.images?.middleImage && (
+          <div className="px-12 mb-8">
+            <img 
+              src={data.images.middleImage} 
+              alt="Middle Image" 
+              className="w-full h-64 object-cover rounded-lg shadow-lg"
+            />
+          </div>
+        )}
+
+        {/* Core Values Section */}
+        <div className="px-12 mb-8">
+          <div className="border-l-4 border-green-600 pl-6">
+            <InlineEditor
+              value={data.coreValues?.title}
+              onChange={(value) => onDataChange?.({ ...data, coreValues: { ...data.coreValues, title: value } })}
+              className="text-2xl font-bold text-gray-800 mb-4"
+              placeholder="Core Values Title"
+              isEditing={isEditing}
+              showLanguageSelector={true}
+            />
+          </div>
+          <InlineEditor
+            value={data.coreValues?.content}
+            onChange={(value) => onDataChange?.({ ...data, coreValues: { ...data.coreValues, content: value } })}
+            className="text-gray-700 leading-relaxed text-justify mb-4 px-12"
+            placeholder="Core Values Description"
+            multiline={true}
+            isEditing={isEditing}
+            showLanguageSelector={true}
+          />
+          <ul className="list-disc list-inside space-y-2 text-gray-700 px-12">
+            {(data.coreValues?.values || []).map((value, index) => (
+              <li key={index} className="text-right">
+                <InlineEditor
+                  value={value}
+                  onChange={(newValue) => {
+                    const newValues = [...(data.coreValues?.values || [])];
+                    newValues[index] = newValue;
+                    onDataChange?.({ ...data, coreValues: { ...data.coreValues, values: newValues } });
+                  }}
+                  placeholder="Vision Title"
+                  isEditing={isEditing}
+                  showLanguageSelector={true}
+                />
+              </li>
             ))}
-          </div>
-          <div className="mt-auto pt-8">
-            <div className="w-16 h-1 bg-blue-900 mb-3" />
-            <div className="text-blue-900 font-bold text-4xl">01</div>
-          </div>
+          </ul>
         </div>
-        <div className="w-1/2 relative">
-          <Background style={style} fallbackColor="#1e40af" />
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-900/80 to-blue-600/60" />
-          <div className="absolute bottom-12 right-12 text-white text-lg font-medium">
-            {data.heroCaption}
-          </div>
+
+        {/* Company Section - No green border, just content */}
+        <div className="px-12 mb-8">
+          <InlineEditor
+            value={data.company?.content}
+            onChange={(value) => onDataChange?.({ ...data, company: { ...data.company, content: value } })}
+            className="text-gray-700 leading-relaxed text-justify"
+            placeholder="Company Description"
+            multiline={true}
+            isEditing={isEditing}
+            showLanguageSelector={true}
+          />
         </div>
+
+        {/* Bottom Image */}
+        {data.images?.bottomImage && (
+          <div className="px-12 mb-8">
+            <img 
+              src={data.images.bottomImage} 
+              alt="Bottom Image" 
+              className="w-full h-64 object-cover rounded-lg shadow-lg"
+            />
+          </div>
+        )}
+        </div>
+
+        {/* Custom Footer */}
+        <CustomFooter 
+          pageNumber={2}
+          totalPages={244}
+          globalSettings={globalSettings}
+        />
       </div>
     ),
     fields: [
-      { key: "title", label: "Title", type: "textarea" },
-      { key: "paragraphs", label: "Paragraphs", type: "list" },
-      { key: "heroCaption", label: "Photo Caption" },
+      { key: "showHeader", label: "Show Header", type: "checkbox", defaultValue: true },
+      { key: "title", label: "Main Title", type: "textarea" },
+      {
+        key: "vision",
+        label: "Vision Section",
+        type: "object",
+        subFields: [
+          { key: "title", label: "Vision Title", type: "text" },
+          { key: "content", label: "Vision Content", type: "textarea" }
+        ]
+      },
+      {
+        key: "coreValues",
+        label: "Core Values",
+        type: "object",
+        subFields: [
+          { key: "title", label: "Values Title", type: "text" },
+          { key: "content", label: "Values Description", type: "textarea" },
+          { key: "values", label: "Values List", type: "list" }
+        ]
+      },
+      {
+        key: "company",
+        label: "Company Section",
+        type: "object",
+        subFields: [
+          { key: "title", label: "Company Title", type: "text" },
+          { key: "content", label: "Company Description", type: "textarea" }
+        ]
+      },
+      {
+        key: "images",
+        label: "Images",
+        type: "object",
+        subFields: [
+          { key: "topImage", label: "Top Image", type: "image" },
+          { key: "middleImage", label: "Middle Image", type: "image" },
+          { key: "bottomImage", label: "Bottom Image", type: "image" }
+        ]
+      }
     ],
   },
   Staff: {
@@ -286,120 +502,158 @@ export const TEMPLATES = {
     name: "Our Staff (Organizational Chart)",
     defaultData: {
       title: "Our\nStaff",
-      subtitle: "The vision of Team Arabia is to continue advancing our roles as the leaders within the industry and develop strong relationships with all our skilled employees and esteemed clients. Integrity, trust, and performance drive us towards our journey of becoming the benchmark within our field",
+      subtitle:
+        "The vision of Team Arabia is to continue advancing our roles as the leaders within the industry and develop strong relationships with all our skilled employees and esteemed clients. Integrity, trust, and performance drive us towards our journey of becoming the benchmark within our field",
       ceo: {
-        name: "Murad al-jammal",
-        position: "Executive Manager",
+        name: "John Smith",
+        position: "Chief Executive Officer",
         image: "",
       },
       managers: [
         {
-          name: "Murad al-jammal",
-          position: "Executive Manager",
+          name: "Sarah Johnson",
+          position: "Operations Manager",
           image: "",
         },
         {
-          name: "Murad al-jammal",
-          position: "Executive Manager",
+          name: "Michael Brown",
+          position: "Project Manager",
           image: "",
         },
         {
-          name: "Murad al-jammal",
-          position: "Executive Manager",
+          name: "Emily Davis",
+          position: "HR Manager",
           image: "",
         },
       ],
       staff: [
         {
-          name: "Murad al-jammal",
-          position: "Executive Manager",
+          name: "David Wilson",
+          position: "Senior Engineer",
           image: "",
         },
         {
-          name: "Murad al-jammal",
-          position: "Executive Manager",
+          name: "Lisa Anderson",
+          position: "Marketing Specialist",
           image: "",
         },
         {
-          name: "Murad al-jammal",
-          position: "Executive Manager",
+          name: "Robert Taylor",
+          position: "Financial Analyst",
           image: "",
         },
         {
-          name: "Murad al-jammal",
-          position: "Executive Manager",
+          name: "Jennifer Martinez",
+          position: "Quality Assurance",
           image: "",
         },
         {
-          name: "Murad al-jammal",
-          position: "Executive Manager",
+          name: "Christopher Lee",
+          position: "Technical Lead",
           image: "",
         },
       ],
       juniorStaff: [
         {
-          name: "Murad al-jammal",
-          position: "Executive Manager",
+          name: "Amanda White",
+          position: "Junior Developer",
           image: "",
         },
         {
-          name: "Murad al-jammal",
-          position: "Executive Manager",
+          name: "Kevin Garcia",
+          position: "Assistant Analyst",
           image: "",
         },
         {
-          name: "Murad al-jammal",
-          position: "Executive Manager",
+          name: "Rachel Thompson",
+          position: "Intern",
           image: "",
         },
         {
-          name: "Murad al-jammal",
-          position: "Executive Manager",
+          name: "Daniel Rodriguez",
+          position: "Junior Designer",
           image: "",
         },
         {
-          name: "Murad al-jammal",
-          position: "Executive Manager",
+          name: "Ashley Clark",
+          position: "Administrative Assistant",
           image: "",
         },
       ],
+      showHeader: true
     },
-    Component: ({ data, style }) => {
+    Component: ({ data, style, globalSettings, isEditing = false, onDataChange, isRTL = false, currentLanguage = 'ar' }) => {
       // Create styled node components
       const StyledCEONode = ({ person }) => (
         <div className="bg-blue-600 text-white p-3 rounded-2xl text-center w-[140px] h-[60px] flex flex-col justify-center shadow-lg">
-          <h3 className="font-bold text-sm text-white leading-tight">{person.name}</h3>
+          <h3 className="font-bold text-sm text-white leading-tight">
+            {person.name}
+          </h3>
           <p className="text-blue-100 text-xs">{person.position}</p>
         </div>
       );
-      
+
       const StyledManagerNode = ({ person }) => (
         <div className="bg-orange-500 text-white p-3 rounded-2xl text-center w-[140px] h-[60px] flex flex-col justify-center shadow-lg">
-          <h4 className="font-bold text-sm leading-tight text-white">{person.name}</h4>
+          <h4 className="font-bold text-sm leading-tight text-white">
+            {person.name}
+          </h4>
           <p className="text-orange-100 text-xs">{person.position}</p>
         </div>
       );
-      
+
       const StyledStaffNode = ({ person }) => (
         <div className="bg-blue-100 border-2 border-blue-300 rounded-2xl p-3 text-center w-[140px] h-[60px] flex flex-col justify-center shadow-md">
-          <h5 className="font-bold text-blue-900 text-sm leading-tight">{person.name}</h5>
+          <h5 className="font-bold text-blue-900 text-sm leading-tight">
+            {person.name}
+          </h5>
           <p className="text-blue-700 text-xs">{person.position}</p>
         </div>
       );
-      
+
       return (
-        <div className="relative w-full h-[1123px] bg-white p-8">
+        <div className={`relative w-full min-h-full  aspect-[210/297] bg-white flex flex-col ${isRTL ? 'text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
           <Background style={style} fallbackColor="#ffffff" />
-          <div className="relative z-10 h-full flex flex-col">
-            {/* Header */}
-            <div className="mb-12">
-              <h2 className="text-blue-900 font-bold text-6xl leading-tight mb-6">
-                {data.title}
-              </h2>
-              <p className="text-gray-600 text-lg leading-relaxed max-w-4xl">
-                {data.subtitle}
-              </p>
-            </div>
+          <div className="relative z-10 flex-1 flex flex-col">
+            {/* Custom Header */}
+            <CustomHeader 
+              pageName={data.title || "Our Staff"}
+              globalSettings={globalSettings}
+              showHeader={data.showHeader !== false}
+            />
+            
+            {/* Content */}
+            <div className="flex-1 p-8">
+              <div className="mb-12">
+                {isEditing ? (
+                  <InlineEditor
+                    value={data.title}
+                    onChange={(value) => onDataChange({ ...data, title: value })}
+                    className="text-blue-900 font-bold text-6xl leading-tight mb-6"
+                    placeholder="Vision Description"
+                    multiline
+                    showLanguageSelector={true}
+                  />
+                ) : (
+                  <h2 className="text-blue-900 font-bold text-6xl leading-tight mb-6">
+                    {data.title}
+                  </h2>
+                )}
+                {isEditing ? (
+                  <InlineEditor
+                    value={data.subtitle}
+                    onChange={(value) => onDataChange({ ...data, subtitle: value })}
+                    className="text-gray-600 text-lg leading-relaxed max-w-4xl"
+                    placeholder="Mission Title"
+                    multiline
+                    showLanguageSelector={true}
+                  />
+                ) : (
+                  <p className="text-gray-600 text-lg leading-relaxed max-w-4xl">
+                    {data.subtitle}
+                  </p>
+                )}
+              </div>
 
             {/* Organizational Chart - Tree Layout with Simple Connecting Lines */}
             <div className="flex-1 flex flex-col justify-center items-center relative">
@@ -413,22 +667,28 @@ export const TEMPLATES = {
                   )}
                 </div>
               )}
-              
+
               {/* Horizontal line connecting managers */}
               {data.managers && data.managers.length > 0 && (
                 <div className="relative mb-4">
-                  <div className="absolute left-1/2 transform -translate-x-1/2 h-0.5 bg-orange-500" style={{width: '400px', top: '-16px'}}></div>
+                  <div
+                    className="absolute left-1/2 transform -translate-x-1/2 h-0.5 bg-orange-500"
+                    style={{ width: "400px", top: "-16px" }}
+                  ></div>
                   {/* Vertical lines down to each manager */}
                   <div className="flex justify-center space-x-24 relative">
                     {data.managers.map((manager, index) => (
                       <div key={index} className="relative">
-                        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-0.5 h-4 bg-orange-500" style={{top: '-20px'}}></div>
+                        <div
+                          className="absolute top-0 left-1/2 transform -translate-x-1/2 w-0.5 h-4 bg-orange-500"
+                          style={{ top: "-20px" }}
+                        ></div>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
-              
+
               {/* Managers Level */}
               {data.managers && data.managers.length > 0 && (
                 <div className="relative mb-12">
@@ -437,7 +697,7 @@ export const TEMPLATES = {
                       <div key={index} className="relative">
                         <StyledManagerNode person={manager} />
                         {/* Vertical line down from each manager */}
-                        {(data.staff && data.staff.length > 0) && (
+                        {data.staff && data.staff.length > 0 && (
                           <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0.5 h-8 bg-blue-400"></div>
                         )}
                       </div>
@@ -445,22 +705,28 @@ export const TEMPLATES = {
                   </div>
                 </div>
               )}
-              
+
               {/* Horizontal line connecting staff */}
               {data.staff && data.staff.length > 0 && (
                 <div className="relative mb-4">
-                  <div className="absolute left-1/2 transform -translate-x-1/2 h-0.5 bg-blue-400" style={{width: '600px', top: '-16px'}}></div>
+                  <div
+                    className="absolute left-1/2 transform -translate-x-1/2 h-0.5 bg-blue-400"
+                    style={{ width: "600px", top: "-16px" }}
+                  ></div>
                   {/* Vertical lines down to each staff member */}
                   <div className="flex justify-center space-x-16 relative">
                     {data.staff.slice(0, 5).map((staff, index) => (
                       <div key={index} className="relative">
-                        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-0.5 h-4 bg-blue-400" style={{top: '-20px'}}></div>
+                        <div
+                          className="absolute top-0 left-1/2 transform -translate-x-1/2 w-0.5 h-4 bg-blue-400"
+                          style={{ top: "-20px" }}
+                        ></div>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
-              
+
               {/* Staff Level */}
               {data.staff && data.staff.length > 0 && (
                 <div className="relative mb-12">
@@ -477,22 +743,28 @@ export const TEMPLATES = {
                   </div>
                 </div>
               )}
-              
+
               {/* Horizontal line connecting junior staff */}
               {data.juniorStaff && data.juniorStaff.length > 0 && (
                 <div className="relative mb-4">
-                  <div className="absolute left-1/2 transform -translate-x-1/2 h-0.5 bg-blue-400" style={{width: '600px', top: '-16px'}}></div>
+                  <div
+                    className="absolute left-1/2 transform -translate-x-1/2 h-0.5 bg-blue-400"
+                    style={{ width: "600px", top: "-16px" }}
+                  ></div>
                   {/* Vertical lines down to each junior staff member */}
                   <div className="flex justify-center space-x-16 relative">
                     {data.juniorStaff.slice(0, 5).map((junior, index) => (
                       <div key={index} className="relative">
-                        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-0.5 h-4 bg-blue-400" style={{top: '-20px'}}></div>
+                        <div
+                          className="absolute top-0 left-1/2 transform -translate-x-1/2 w-0.5 h-4 bg-blue-400"
+                          style={{ top: "-20px" }}
+                        ></div>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
-              
+
               {/* Junior Staff Level */}
               {data.juniorStaff && data.juniorStaff.length > 0 && (
                 <div className="relative">
@@ -505,16 +777,20 @@ export const TEMPLATES = {
               )}
             </div>
 
-            {/* Footer */}
-            <div className="mt-8">
-              <div className="w-16 h-1 bg-blue-900 mb-3" />
-              <div className="text-blue-900 font-bold text-4xl">02</div>
             </div>
+            
+            {/* Custom Footer */}
+            <CustomFooter 
+              pageNumber={2}
+              totalPages={244}
+              globalSettings={globalSettings}
+            />
           </div>
         </div>
       );
     },
     fields: [
+      { key: "showHeader", label: "إظهار الهيدر", type: "checkbox", defaultValue: true },
       { key: "title", label: "Title", type: "textarea" },
       { key: "subtitle", label: "Subtitle", type: "textarea" },
       {
@@ -591,41 +867,93 @@ export const TEMPLATES = {
             "Our detailed O&M manuals provide building operators with essential information for maintaining optimal system performance. We create comprehensive documentation including equipment specifications, maintenance schedules, troubleshooting guides, and performance benchmarks.",
         },
       ],
+      showHeader: true
     },
-    Component: ({ data, style }) => (
-      <div className="relative w-full h-[1123px] bg-white flex">
-        <div className="w-20 bg-gradient-to-b from-blue-900 to-blue-700 flex flex-col items-center py-12">
-          <div className="text-white font-bold text-2xl mb-6">03</div>
-          <div className="flex-1 w-0.5 bg-white/30" />
-          <div className="text-white/70 text-sm font-medium transform -rotate-90 origin-center mt-6">
-            CONTENT
-          </div>
-        </div>
-        <div className="flex-1 p-12">
-          <Background style={style} fallbackColor="#ffffff" />
-          <div className="relative z-10 h-full flex flex-col">
-            <h2 className="text-blue-900 font-bold text-6xl leading-tight mb-10">
-              {data.title}
-            </h2>
-            <div className="flex-1 space-y-8 overflow-hidden">
-              {(data.sections || []).map((section, i) => (
-                <div key={i} className="border-l-4 border-blue-300 pl-8 py-2">
-                  <h3 className="text-blue-900 font-bold text-xl mb-3 leading-tight">
-                    {section.heading}
-                  </h3>
-                  <p className="text-gray-700 text-base leading-relaxed text-justify">
-                    {section.content}
-                  </p>
-                </div>
-              ))}
+    Component: ({ data, style, globalSettings, isEditing = false, onDataChange, isRTL = false, currentLanguage = 'ar' }) => (
+      <div className="relative w-full h-[1123px] bg-white">
+        <Background style={style} fallbackColor="#ffffff" />
+        <div className="relative z-10 h-full flex flex-col">
+          {/* Custom Header */}
+          <CustomHeader 
+            pageName={data.title || "Content"}
+            globalSettings={globalSettings}
+            showHeader={data.showHeader !== false}
+          />
+          
+          <div className="flex-1 flex">
+            <div className="w-20 bg-gradient-to-b from-blue-900 to-blue-700 flex flex-col items-center py-12">
+              <div className="text-white font-bold text-2xl mb-6">03</div>
+              <div className="flex-1 w-0.5 bg-white/30" />
+              <div className="text-white/70 text-sm font-medium transform -rotate-90 origin-center mt-6">
+                CONTENT
+              </div>
             </div>
-            <div className="mt-8 flex justify-between items-center">
-              <div className="w-16 h-1 bg-blue-900" />
-              <div className="text-gray-400 text-sm font-medium">
-                Page 3 of 5
+            <div className="flex-1 p-12">
+              <div className="h-full flex flex-col">
+                {isEditing ? (
+                  <InlineEditor
+                    value={data.title}
+                    onChange={(value) => onDataChange({ ...data, title: value })}
+                    className="text-blue-900 font-bold text-6xl leading-tight mb-10"
+                    placeholder="Mission Description"
+                    showLanguageSelector={true}
+                  />
+                ) : (
+                  <h2 className="text-blue-900 font-bold text-6xl leading-tight mb-10">
+                    {data.title}
+                  </h2>
+                )}
+                <div className="flex-1 space-y-8 overflow-hidden">
+                  {(data.sections || []).map((section, i) => (
+                    <div key={i} className="border-l-4 border-blue-300 pl-8 py-2">
+                      {isEditing ? (
+                        <InlineEditor
+                          value={section.heading}
+                          onChange={(value) => {
+                            const newSections = [...(data.sections || [])];
+                            newSections[i] = { ...section, heading: value };
+                            onDataChange({ ...data, sections: newSections });
+                          }}
+                          className="text-blue-900 font-bold text-xl mb-3 leading-tight"
+                          placeholder="Section Heading"
+                          showLanguageSelector={true}
+                        />
+                      ) : (
+                        <h3 className="text-blue-900 font-bold text-xl mb-3 leading-tight">
+                          {section.heading}
+                        </h3>
+                      )}
+                      {isEditing ? (
+                        <InlineEditor
+                          value={section.content}
+                          onChange={(value) => {
+                            const newSections = [...(data.sections || [])];
+                            newSections[i] = { ...section, content: value };
+                            onDataChange({ ...data, sections: newSections });
+                          }}
+                          className="text-gray-700 text-base leading-relaxed text-justify"
+                          placeholder="Section Content"
+                          multiline
+                          showLanguageSelector={true}
+                        />
+                      ) : (
+                        <p className="text-gray-700 text-base leading-relaxed text-justify">
+                          {section.content}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
+          
+          {/* Custom Footer */}
+          <CustomFooter 
+            pageNumber={3}
+            totalPages={244}
+            globalSettings={globalSettings}
+          />
         </div>
       </div>
     ),
@@ -640,6 +968,142 @@ export const TEMPLATES = {
           { key: "content", label: "Content", type: "textarea" },
         ],
       },
+    ],
+  },
+  Projects: {
+    id: "projects",
+    name: "Our Projects",
+    defaultData: {
+      title: "OUR PROJECTS",
+      projects: [
+        {
+          title: "Holiday Inn Hotel",
+          subtitle: "Estidama Tower Riyadh",
+          image: "/api/placeholder/400/250",
+          description: "A luxury hotel project featuring modern architecture and sustainable design principles."
+        },
+        {
+          title: "Psychiatric and Addiction Hospital",
+          subtitle: "Abha",
+          image: "/api/placeholder/400/250",
+          description: "A specialized healthcare facility designed with patient comfort and therapeutic environments in mind."
+        },
+        {
+          title: "College of Medicine Building",
+          subtitle: "King Saud University",
+          image: "/api/placeholder/400/250",
+          description: "Health sciences complex featuring three medical buildings with state-of-the-art facilities."
+        },
+        {
+          title: "College of Medicine Building",
+          subtitle: "King Saud University",
+          image: "/api/placeholder/400/250",
+          description: "Health sciences complex featuring three medical buildings with advanced research facilities."
+        }
+      ],
+      currentPage: 1,
+      totalPages: 244,
+      showHeader: true
+    },
+    Component: ({ data, style, globalSettings, isEditing = false, onDataChange, isRTL = false, currentLanguage = 'ar' }) => (
+      <div className={`relative w-full min-h-full bg-white flex flex-col ${isRTL ? 'text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+        <Background style={style} fallbackColor="#ffffff" />
+        
+        {/* Custom Header */}
+        <CustomHeader 
+          pageName="Projects"
+          globalSettings={globalSettings}
+          showHeader={data.showHeader !== false}
+        />
+
+        {/* Main Content */}
+        <div className="flex-1 px-12 py-8">
+          {/* Title */}
+          <div className="mb-12 text-center">
+            <InlineEditor
+              value={data.title}
+              onChange={(value) => onDataChange?.({ ...data, title: value })}
+              isEditing={isEditing}
+              className="text-3xl font-bold text-gray-800 tracking-wide"
+              placeholder="OUR PROJECTS"
+            />
+          </div>
+
+          {/* Projects Grid - 1 column */}
+          <div className="grid grid-cols-1 gap-6 w-full max-w-none">
+            {data.projects && data.projects.map((project, index) => (
+              <div key={index} className="bg-white rounded-3xl shadow-lg overflow-hidden border border-gray-100 hover:shadow-xl transition-shadow duration-300">
+                <div className="flex flex-col h-80">
+                  {/* Project Image */}
+                  <div className="h-48 bg-gray-200 overflow-hidden">
+                    <InlineEditor
+                      value={project.image}
+                      onChange={(value) => {
+                        const updatedProjects = [...data.projects];
+                        updatedProjects[index] = { ...project, image: value };
+                        onDataChange?.({ ...data, projects: updatedProjects });
+                      }}
+                      isEditing={isEditing}
+                      type="image"
+                      className="w-full h-full object-cover"
+                      placeholder="Click to upload project image"
+                    />
+                  </div>
+                  
+                  {/* Project Info */}
+                  <div className="flex-1 p-4 flex flex-col justify-center">
+                    <InlineEditor
+                      value={project.title}
+                      onChange={(value) => {
+                        const updatedProjects = [...data.projects];
+                        updatedProjects[index] = { ...project, title: value };
+                        onDataChange?.({ ...data, projects: updatedProjects });
+                      }}
+                      isEditing={isEditing}
+                      className="text-base font-bold text-gray-800 mb-1 leading-tight"
+                      placeholder="Project Title"
+                    />
+                    <InlineEditor
+                      value={project.subtitle}
+                      onChange={(value) => {
+                        const updatedProjects = [...data.projects];
+                        updatedProjects[index] = { ...project, subtitle: value };
+                        onDataChange?.({ ...data, projects: updatedProjects });
+                      }}
+                      isEditing={isEditing}
+                      className="text-sm text-gray-600 font-medium"
+                      placeholder="Project Subtitle"
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Custom Footer with Pagination */}
+        <CustomFooter 
+          currentPage={data.currentPage || 1}
+          totalPages={data.totalPages || 244}
+          globalSettings={globalSettings}
+        />
+      </div>
+    ),
+    fields: [
+      { key: "title", label: "Page Title", type: "text" },
+      {
+        key: "projects",
+        label: "Projects",
+        type: "repeater",
+        subFields: [
+          { key: "title", label: "Project Title", type: "text" },
+          { key: "subtitle", label: "Project Subtitle", type: "text" },
+          { key: "image", label: "Project Image", type: "image" },
+          { key: "description", label: "Project Description", type: "textarea" }
+        ],
+      },
+      { key: "currentPage", label: "Current Page", type: "number" },
+      { key: "totalPages", label: "Total Pages", type: "number" }
     ],
   },
 };
