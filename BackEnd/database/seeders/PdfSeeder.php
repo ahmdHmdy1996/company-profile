@@ -92,7 +92,6 @@ class PdfSeeder extends Seeder
             'order' => 1
         ]);
 
-        // Create sample sections for Services page
         Section::create([
             'page_id' => $servicesPage->id,
             'data' => [
@@ -116,7 +115,6 @@ class PdfSeeder extends Seeder
             'order' => 0
         ]);
 
-        // Create sample sections for Contact page
         Section::create([
             'page_id' => $contactPage->id,
             'data' => [

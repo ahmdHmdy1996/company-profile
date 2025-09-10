@@ -22,7 +22,7 @@ class UpdateSectionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'data' => 'sometimes|required|array',
+            'data' => 'sometimes|required|json',
             'order' => 'sometimes|integer|min:0',
         ];
     }

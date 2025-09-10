@@ -23,9 +23,9 @@ class StorePdfRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:255',
-            'cover' => 'nullable|array',
-            'header' => 'nullable|array',
-            'footer' => 'nullable|array',
+            'cover' => 'nullable|json',
+            'header' => 'nullable|json',
+            'footer' => 'nullable|json',
             'background_image' => 'nullable|string|max:255',
         ];
     }
