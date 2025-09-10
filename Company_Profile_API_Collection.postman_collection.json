@@ -1,0 +1,767 @@
+{
+	"info": {
+		"_postman_id": "company-profile-api-collection",
+		"name": "Company Profile API Collection",
+		"description": "مجموعة شاملة من API endpoints لنظام إدارة ملفات الشركة",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Register",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"اسم المستخدم\",\n    \"email\": \"user@example.com\",\n    \"password\": \"password123\",\n    \"password_confirmation\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/register",
+							"host": ["{{base_url}}"],
+							"path": ["api", "register"]
+						}
+					}
+				},
+				{
+					"name": "Login",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"user@example.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "login"]
+						}
+					}
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/logout",
+							"host": ["{{base_url}}"],
+							"path": ["api", "logout"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Company Profiles",
+			"item": [
+				{
+					"name": "Get All Company Profiles",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/company-profiles",
+							"host": ["{{base_url}}"],
+							"path": ["api", "company-profiles"]
+						}
+					}
+				},
+				{
+					"name": "Create Company Profile",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"company_name\": \"اسم الشركة\",\n    \"company_email\": \"company@example.com\",\n    \"company_phone\": \"+966501234567\",\n    \"company_website\": \"https://company.com\",\n    \"company_address\": \"عنوان الشركة\",\n    \"company_description\": \"وصف الشركة\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/company-profiles",
+							"host": ["{{base_url}}"],
+							"path": ["api", "company-profiles"]
+						}
+					}
+				},
+				{
+					"name": "Get Company Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/company-profiles/{{company_profile_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "company-profiles", "{{company_profile_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Update Company Profile",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"company_name\": \"اسم الشركة المحدث\",\n    \"company_email\": \"updated@example.com\",\n    \"company_phone\": \"+966501234567\",\n    \"company_website\": \"https://updated-company.com\",\n    \"company_address\": \"العنوان المحدث\",\n    \"company_description\": \"الوصف المحدث\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/company-profiles/{{company_profile_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "company-profiles", "{{company_profile_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Delete Company Profile",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/company-profiles/{{company_profile_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "company-profiles", "{{company_profile_id}}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Company Settings",
+			"item": [
+				{
+					"name": "Get Company Settings",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/company-profiles/{{company_profile_id}}/company-settings",
+							"host": ["{{base_url}}"],
+							"path": ["api", "company-profiles", "{{company_profile_id}}", "company-settings"]
+						}
+					}
+				},
+				{
+					"name": "Save Company Settings",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"company_name\": \"اسم الشركة\",\n    \"company_email\": \"info@company.com\",\n    \"company_phone\": \"+966501234567\",\n    \"company_website\": \"https://company.com\",\n    \"company_address\": \"الرياض، المملكة العربية السعودية\",\n    \"company_description\": \"وصف مفصل عن الشركة وأنشطتها\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/company-profiles/{{company_profile_id}}/company-settings",
+							"host": ["{{base_url}}"],
+							"path": ["api", "company-profiles", "{{company_profile_id}}", "company-settings"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Background Settings",
+			"item": [
+				{
+					"name": "Get Background Settings",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/company-profiles/{{company_profile_id}}/background-settings",
+							"host": ["{{base_url}}"],
+							"path": ["api", "company-profiles", "{{company_profile_id}}", "background-settings"]
+						}
+					}
+				},
+				{
+					"name": "Save Background Settings",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"default_background_color\": \"#ffffff\",\n    \"background_image\": \"path/to/background.jpg\",\n    \"background_opacity\": 0.8,\n    \"background_repeat_pattern\": \"no-repeat\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/company-profiles/{{company_profile_id}}/background-settings",
+							"host": ["{{base_url}}"],
+							"path": ["api", "company-profiles", "{{company_profile_id}}", "background-settings"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Theme Settings",
+			"item": [
+				{
+					"name": "Get Theme Settings",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/company-profiles/{{company_profile_id}}/theme-settings",
+							"host": ["{{base_url}}"],
+							"path": ["api", "company-profiles", "{{company_profile_id}}", "theme-settings"]
+						}
+					}
+				},
+				{
+					"name": "Save Theme Settings",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"selected_theme\": \"modern\",\n    \"primary_color\": \"#007bff\",\n    \"secondary_color\": \"#6c757d\",\n    \"accent_color\": \"#28a745\",\n    \"background_color\": \"#f8f9fa\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/company-profiles/{{company_profile_id}}/theme-settings",
+							"host": ["{{base_url}}"],
+							"path": ["api", "company-profiles", "{{company_profile_id}}", "theme-settings"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Global Settings",
+			"item": [
+				{
+					"name": "Get Global Settings",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/company-profiles/{{company_profile_id}}/global-settings",
+							"host": ["{{base_url}}"],
+							"path": ["api", "company-profiles", "{{company_profile_id}}", "global-settings"]
+						}
+					}
+				},
+				{
+					"name": "Save Global Settings",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"header_logo\": \"path/to/logo.png\",\n    \"show_logo\": true,\n    \"show_footer_email\": true,\n    \"show_footer_phone\": true,\n    \"show_page_number\": true,\n    \"footer_email\": \"contact@company.com\",\n    \"footer_phone\": \"+966501234567\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/company-profiles/{{company_profile_id}}/global-settings",
+							"host": ["{{base_url}}"],
+							"path": ["api", "company-profiles", "{{company_profile_id}}", "global-settings"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Page Contents",
+			"item": [
+				{
+					"name": "Get All Page Contents",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/company-profiles/{{company_profile_id}}/page-contents",
+							"host": ["{{base_url}}"],
+							"path": ["api", "company-profiles", "{{company_profile_id}}", "page-contents"]
+						}
+					}
+				},
+				{
+					"name": "Get Page Content by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/company-profiles/{{company_profile_id}}/page-contents/{{page_content_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "company-profiles", "{{company_profile_id}}", "page-contents", "{{page_content_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Create Page Content",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"page_type\": \"about_us\",\n    \"page_title\": \"من نحن\",\n    \"page_subtitle\": \"تعرف على شركتنا\",\n    \"page_content\": \"محتوى مفصل عن الشركة وتاريخها ورؤيتها\",\n    \"page_image\": \"path/to/about-image.jpg\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/company-profiles/{{company_profile_id}}/page-contents",
+							"host": ["{{base_url}}"],
+							"path": ["api", "company-profiles", "{{company_profile_id}}", "page-contents"]
+						}
+					}
+				},
+				{
+					"name": "Delete Page Content",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/company-profiles/{{company_profile_id}}/page-contents/{{page_content_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "company-profiles", "{{company_profile_id}}", "page-contents", "{{page_content_id}}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Staff Members",
+			"item": [
+				{
+					"name": "Get All Staff Members",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/company-profiles/{{company_profile_id}}/staff-members",
+							"host": ["{{base_url}}"],
+							"path": ["api", "company-profiles", "{{company_profile_id}}", "staff-members"]
+						}
+					}
+				},
+				{
+					"name": "Get Staff Member by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/company-profiles/{{company_profile_id}}/staff-members/{{staff_member_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "company-profiles", "{{company_profile_id}}", "staff-members", "{{staff_member_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Create Staff Member",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"staff_name\": \"أحمد محمد\",\n    \"staff_position\": \"مدير التطوير\",\n    \"staff_image\": \"path/to/staff-photo.jpg\",\n    \"staff_type\": \"Manager\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/company-profiles/{{company_profile_id}}/staff-members",
+							"host": ["{{base_url}}"],
+							"path": ["api", "company-profiles", "{{company_profile_id}}", "staff-members"]
+						}
+					}
+				},
+				{
+					"name": "Update Staff Member",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"staff_name\": \"أحمد محمد المحدث\",\n    \"staff_position\": \"مدير التطوير الأول\",\n    \"staff_image\": \"path/to/updated-staff-photo.jpg\",\n    \"staff_type\": \"Senior Manager\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/company-profiles/{{company_profile_id}}/staff-members/{{staff_member_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "company-profiles", "{{company_profile_id}}", "staff-members", "{{staff_member_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Delete Staff Member",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/company-profiles/{{company_profile_id}}/staff-members/{{staff_member_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "company-profiles", "{{company_profile_id}}", "staff-members", "{{staff_member_id}}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Projects",
+			"item": [
+				{
+					"name": "Get All Projects",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/company-profiles/{{company_profile_id}}/projects",
+							"host": ["{{base_url}}"],
+							"path": ["api", "company-profiles", "{{company_profile_id}}", "projects"]
+						}
+					}
+				},
+				{
+					"name": "Get Project by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/company-profiles/{{company_profile_id}}/projects/{{project_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "company-profiles", "{{company_profile_id}}", "projects", "{{project_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Create Project",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"project_title\": \"مشروع تطوير موقع إلكتروني\",\n    \"project_subtitle\": \"موقع تجاري متكامل\",\n    \"project_image\": \"path/to/project-image.jpg\",\n    \"current_page_number\": 1,\n    \"total_pages\": 10\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/company-profiles/{{company_profile_id}}/projects",
+							"host": ["{{base_url}}"],
+							"path": ["api", "company-profiles", "{{company_profile_id}}", "projects"]
+						}
+					}
+				},
+				{
+					"name": "Update Project",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"project_title\": \"مشروع تطوير موقع إلكتروني محدث\",\n    \"project_subtitle\": \"موقع تجاري متكامل ومحسن\",\n    \"project_image\": \"path/to/updated-project-image.jpg\",\n    \"current_page_number\": 5,\n    \"total_pages\": 15\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/company-profiles/{{company_profile_id}}/projects/{{project_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "company-profiles", "{{company_profile_id}}", "projects", "{{project_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Delete Project",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/company-profiles/{{company_profile_id}}/projects/{{project_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "company-profiles", "{{company_profile_id}}", "projects", "{{project_id}}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "File Upload",
+			"item": [
+				{
+					"name": "Upload Image",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "image",
+									"type": "file",
+									"src": "/path/to/your/image.jpg"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/upload-image",
+							"host": ["{{base_url}}"],
+							"path": ["api", "upload-image"]
+						}
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"description": "Base URL for the API server"
+		},
+		{
+			"key": "auth_token",
+			"value": "",
+			"description": "Authentication token obtained from login"
+		},
+		{
+			"key": "company_profile_id",
+			"value": "1",
+			"description": "ID of the company profile"
+		},
+		{
+			"key": "page_content_id",
+			"value": "1",
+			"description": "ID of the page content"
+		},
+		{
+			"key": "staff_member_id",
+			"value": "1",
+			"description": "ID of the staff member"
+		},
+		{
+			"key": "project_id",
+			"value": "1",
+			"description": "ID of the project"
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{auth_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Pre-request script for authentication",
+					"// You can add any pre-request logic here"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Test script for response validation",
+					"pm.test('Status code is 200', function () {",
+					"    pm.response.to.have.status(200);",
+					"});",
+					"",
+					"// Auto-save auth token from login response",
+					"if (pm.info.requestName === 'Login') {",
+					"    const responseJson = pm.response.json();",
+					"    if (responseJson.token) {",
+					"        pm.collectionVariables.set('auth_token', responseJson.token);",
+					"    }",
+					"}"
+				]
+			}
+		}
+	]
+}

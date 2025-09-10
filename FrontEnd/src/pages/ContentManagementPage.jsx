@@ -22,10 +22,12 @@ import TemplateRenderer from '../components/TemplateRenderer';
 import PageHeader from '../components/PageHeader';
 import GlobalSettings from '../components/GlobalSettings';
 import LanguageSelector from '../components/LanguageSelector';
+import { PageContentService, StaffService, ProjectService } from '../services';
 
 const ContentManagementPage = ({ 
   sections = [], 
   selectedPageId, 
+  companyProfileId,
   onSelectPage = () => {}, 
   onUpdatePage = () => {},
   onAddSection = () => {},
@@ -49,6 +51,49 @@ const ContentManagementPage = ({
       phone: '+966 11 234 5678'
     }
   });
+  const [pageContents, setPageContents] = useState([]);
+  const [staffMembers, setStaffMembers] = useState([]);
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Load data from services
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        
+        if (!companyProfileId) {
+          console.log('لا يوجد معرف ملف الشركة');
+          setLoading(false);
+          return;
+        }
+        
+        // Load page contents
+        const pageContentsData = await PageContentService.getAllPageContents(companyProfileId);
+        setPageContents(pageContentsData || []);
+        
+        // Load staff members
+        const staffData = await StaffService.getAllStaffMembers(companyProfileId);
+        setStaffMembers(staffData || []);
+        
+        // Load projects
+        const projectsData = await ProjectService.getAllProjects(companyProfileId);
+        setProjects(projectsData || []);
+        
+        console.log('تم تحميل البيانات من الخدمات:', {
+          pageContents: pageContentsData,
+          staff: staffData,
+          projects: projectsData
+        });
+      } catch (error) {
+        console.error('خطأ في تحميل البيانات:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadData();
+  }, [companyProfileId]);
   
   // Default sections if none provided
   const defaultSections = [
@@ -289,14 +334,48 @@ const ContentManagementPage = ({
 
   const handleSavePage = async (pageId, updatedData) => {
     try {
-      await onUpdatePage(pageId, updatedData || tempPageData);
+      const dataToSave = updatedData || tempPageData;
+      
+      // Check if this is an existing page content or new one
+      const existingContent = Array.isArray(pageContents) ? pageContents.find(content => content.page_id === pageId) : null;
+      
+      if (existingContent) {
+        // Update existing page content
+        await PageContentService.updatePageContent(companyProfileId, existingContent.id, {
+          page_id: pageId,
+          content_data: JSON.stringify(dataToSave),
+          page_title: dataToSave.title || 'Untitled Page'
+        });
+        
+        // Update local state
+        setPageContents(prev => prev.map(content => 
+          content.id === existingContent.id 
+            ? { ...content, content_data: JSON.stringify(dataToSave), page_title: dataToSave.title || 'Untitled Page' }
+            : content
+        ));
+      } else {
+        // Create new page content
+        const newContent = await PageContentService.createPageContent(companyProfileId, {
+          page_id: pageId,
+          content_data: JSON.stringify(dataToSave),
+          page_title: dataToSave.title || 'Untitled Page'
+        });
+        
+        // Update local state
+        setPageContents(prev => [...prev, newContent]);
+      }
+      
+      // Also call the parent update function for backward compatibility
+      await onUpdatePage(pageId, dataToSave);
+      
       setEditingPageId(null);
       setTempPageData(null);
-      // Show success message
-      alert('Changes saved successfully!');
+      
+      console.log('تم حفظ محتوى الصفحة بنجاح');
+      alert('تم حفظ التغييرات بنجاح!');
     } catch (error) {
-      console.error('Error saving page:', error);
-      alert('An error occurred while saving changes');
+      console.error('خطأ في حفظ الصفحة:', error);
+      alert('حدث خطأ أثناء حفظ التغييرات: ' + error.message);
     }
   };
 

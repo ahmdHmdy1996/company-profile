@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
 import { useNavigate } from 'react-router-dom';
+import { SettingsService } from '../services';
 
 const GeneralSettingsPage = ({ 
   companyData, 

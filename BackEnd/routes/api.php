@@ -6,6 +6,13 @@ use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\Api\CompanyProfileController;
 use App\Http\Controllers\Api\AttachmentController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\CompanySettingController;
+use App\Http\Controllers\BackgroundSettingController;
+use App\Http\Controllers\ThemeSettingController;
+use App\Http\Controllers\GlobalSettingController;
+use App\Http\Controllers\PageContentController;
+use App\Http\Controllers\StaffMemberController;
+use App\Http\Controllers\ProjectController;
 
 
 // Authentication routes (public)
@@ -31,6 +38,45 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('attachments', AttachmentController::class);
     Route::get('attachments/{attachment}/download', [AttachmentController::class, 'download'])->name('attachments.download');
     Route::post('attachments/reorder', [AttachmentController::class, 'reorder'])->name('attachments.reorder');
+
+    // Settings API Routes
+    Route::prefix('company-profiles/{companyProfileId}')->group(function () {
+        // Company Settings
+        Route::get('/company-settings', [CompanySettingController::class, 'show']);
+        Route::post('/company-settings', [CompanySettingController::class, 'store']);
+        
+        // Background Settings
+        Route::get('/background-settings', [BackgroundSettingController::class, 'show']);
+        Route::post('/background-settings', [BackgroundSettingController::class, 'store']);
+        
+        // Theme Settings
+        Route::get('/theme-settings', [ThemeSettingController::class, 'show']);
+        Route::post('/theme-settings', [ThemeSettingController::class, 'store']);
+        
+        // Global Settings
+        Route::get('/global-settings', [GlobalSettingController::class, 'show']);
+        Route::post('/global-settings', [GlobalSettingController::class, 'store']);
+        
+        // Page Contents
+        Route::get('/page-contents', [PageContentController::class, 'index']);
+        Route::get('/page-contents/{pageType}', [PageContentController::class, 'show']);
+        Route::post('/page-contents', [PageContentController::class, 'store']);
+        Route::delete('/page-contents/{pageType}', [PageContentController::class, 'destroy']);
+        
+        // Staff Members
+        Route::get('/staff-members', [StaffMemberController::class, 'index']);
+        Route::get('/staff-members/{id}', [StaffMemberController::class, 'show']);
+        Route::post('/staff-members', [StaffMemberController::class, 'store']);
+        Route::put('/staff-members/{id}', [StaffMemberController::class, 'update']);
+        Route::delete('/staff-members/{id}', [StaffMemberController::class, 'destroy']);
+        
+        // Projects
+        Route::get('/projects', [ProjectController::class, 'index']);
+        Route::get('/projects/{id}', [ProjectController::class, 'show']);
+        Route::post('/projects', [ProjectController::class, 'store']);
+        Route::put('/projects/{id}', [ProjectController::class, 'update']);
+        Route::delete('/projects/{id}', [ProjectController::class, 'destroy']);
+    });
 
     // Image upload endpoint (protected)
     Route::post('/upload-image', function (Request $request) {
