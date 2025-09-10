@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StorePageRequest extends FormRequest
+class UpdatePageRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,11 +22,10 @@ class StorePageRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'pdf_id' => 'required|exists:pdfs,id',
-            'has_header' => 'required|exists:pdfs,id',
-            'has_footer' => 'required|exists:pdfs,id',
-            'title' => 'required|string|max:255',
-            'order' => 'nullable|integer|min:0',
+            'has_header' => 'sometimes|required|exists:pdfs,id',
+            'has_footer' => 'sometimes|required|exists:pdfs,id',
+            'title' => 'sometimes|required|string|max:255',
+            'order' => 'sometimes|integer|min:0',
         ];
     }
 
@@ -38,8 +37,6 @@ class StorePageRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'pdf_id.required' => 'PDF ID is required.',
-            'pdf_id.exists' => 'The selected PDF does not exist.',
             'has_header.required' => 'Header PDF ID is required.',
             'has_header.exists' => 'The selected header PDF does not exist.',
             'has_footer.required' => 'Footer PDF ID is required.',

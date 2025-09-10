@@ -4,124 +4,144 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
-use Illuminate\Http\Request;
+use App\Http\Requests\StoreSettingRequest;
+use App\Http\Requests\UpdateSettingRequest;
+use App\Http\Resources\SettingResource;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Http\Request;
 
 class SettingController extends Controller
 {
     /**
-     * Display the settings.
+     * Display a listing of settings.
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $settings = Setting::first();
-
-        return response()->json([
-            'success' => true,
-            'data' => $settings,
-            'message' => 'Settings retrieved successfully'
-        ]);
+        $query = Setting::query();
+        
+        // Filter by category if provided
+        if ($request->has('category')) {
+            $query->where('category', $request->category);
+        }
+        
+        $settings = $query->orderBy('category')
+                          ->orderBy('key')
+                          ->get();
+        
+        return successResponse(
+            SettingResource::collection($settings),
+            'Settings retrieved successfully'
+        );
     }
 
     /**
-     * Store or update the settings.
+     * Store a newly created setting.
      */
-    public function store(Request $request): JsonResponse
+    public function store(StoreSettingRequest $request): JsonResponse
     {
-        try {
-            $validated = $request->validate([
-                'company_name' => 'nullable|string|max:255',
-                'company_email' => 'nullable|email|max:255',
-                'company_phone' => 'nullable|string|max:50',
-                'company_website' => 'nullable|url|max:255',
-                'company_address' => 'nullable|string',
-                'company_description' => 'nullable|string',
-            ]);
+        $setting = Setting::create($request->validated());
 
-            // Update existing settings or create new ones
-            $settings = Setting::first();
-
-            if ($settings) {
-                $settings->update($validated);
-            } else {
-                $settings = Setting::create($validated);
-            }
-
-            return response()->json([
-                'success' => true,
-                'data' => $settings,
-                'message' => 'Settings saved successfully'
-            ]);
-
-        } catch (ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed',
-                'errors' => $e->errors()
-            ], 422);
-        }
+        return successResponse(
+            new SettingResource($setting),
+            'Setting created successfully',
+            201
+        );
     }
 
     /**
      * Display the specified setting.
      */
-    public function show(string $id): JsonResponse
+    public function show(Setting $setting): JsonResponse
     {
-        $setting = Setting::find($id);
+        return successResponse(
+            new SettingResource($setting),
+            'Setting retrieved successfully'
+        );
+    }
 
+    /**
+     * Display setting by key.
+     */
+    public function showByKey(string $key): JsonResponse
+    {
+        $setting = Setting::where('key', $key)->first();
+        
         if (!$setting) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Setting not found'
-            ], 404);
+            return errorResponse('Setting not found', 404);
         }
 
-        return response()->json([
-            'success' => true,
-            'data' => $setting,
-            'message' => 'Setting retrieved successfully'
-        ]);
+        return successResponse(
+            new SettingResource($setting),
+            'Setting retrieved successfully'
+        );
     }
 
     /**
      * Update the specified setting.
      */
-    public function update(Request $request, string $id): JsonResponse
+    public function update(UpdateSettingRequest $request, Setting $setting): JsonResponse
     {
-        $setting = Setting::find($id);
+        $setting->update($request->validated());
 
+        return successResponse(
+            new SettingResource($setting),
+            'Setting updated successfully'
+        );
+    }
+
+    /**
+     * Update setting by key.
+     */
+    public function updateByKey(UpdateSettingRequest $request, string $key): JsonResponse
+    {
+        $setting = Setting::where('key', $key)->first();
+        
         if (!$setting) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Setting not found'
-            ], 404);
+            return errorResponse('Setting not found', 404);
         }
 
-        try {
-            $validated = $request->validate([
-                'company_name' => 'sometimes|nullable|string|max:255',
-                'company_email' => 'sometimes|nullable|email|max:255',
-                'company_phone' => 'sometimes|nullable|string|max:50',
-                'company_website' => 'sometimes|nullable|url|max:255',
-                'company_address' => 'sometimes|nullable|string',
-                'company_description' => 'sometimes|nullable|string',
-            ]);
+        $setting->update($request->validated());
 
-            $setting->update($validated);
+        return successResponse(
+            new SettingResource($setting),
+            'Setting updated successfully'
+        );
+    }
 
-            return response()->json([
-                'success' => true,
-                'data' => $setting,
-                'message' => 'Setting updated successfully'
-            ]);
+    /**
+     * Remove the specified setting.
+     */
+    public function destroy(Setting $setting): JsonResponse
+    {
+        $setting->delete();
 
-        } catch (ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed',
-                'errors' => $e->errors()
-            ], 422);
+        return successResponse(
+            null,
+            'Setting deleted successfully'
+        );
+    }
+
+    /**
+     * Bulk update settings.
+     */
+    public function bulkUpdate(Request $request): JsonResponse
+    {
+        $request->validate([
+            'settings' => 'required|array',
+            'settings.*.key' => 'required|string',
+            'settings.*.value' => 'required'
+        ]);
+
+        foreach ($request->settings as $settingData) {
+            Setting::updateOrCreate(
+                ['key' => $settingData['key']],
+                ['value' => $settingData['value']]
+            );
         }
+
+        return successResponse(
+            null,
+            'Settings updated successfully'
+        );
     }
 }

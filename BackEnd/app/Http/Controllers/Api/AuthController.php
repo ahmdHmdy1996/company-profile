@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
@@ -12,9 +14,9 @@ use Illuminate\Validation\ValidationException;
 class AuthController extends Controller
 {
     /**
-     * Register a new user
+     * Register a new user.
      */
-    public function register(Request $request)
+    public function register(Request $request): JsonResponse
     {
         try {
             $validated = $request->validate([
@@ -29,34 +31,23 @@ class AuthController extends Controller
                 'password' => Hash::make($validated['password']),
             ]);
 
-            $token = $user->createToken('auth-token')->plainTextToken;
+            $token = $user->createToken('auth_token')->plainTextToken;
 
-            return response()->json([
-                'success' => true,
-                'user' => $user,
+            return successResponse([
+                'user' => new UserResource($user),
                 'token' => $token,
-                'message' => 'User registered successfully'
-            ], 201);
+                'token_type' => 'Bearer'
+            ], 'User registered successfully', 201);
 
         } catch (ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed',
-                'errors' => $e->errors()
-            ], 422);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Registration failed',
-                'error' => $e->getMessage()
-            ], 500);
+            return validationResponse($e->errors());
         }
     }
 
     /**
-     * Login user
+     * Login user.
      */
-    public function login(Request $request)
+    public function login(Request $request): JsonResponse
     {
         try {
             $validated = $request->validate([
@@ -64,79 +55,90 @@ class AuthController extends Controller
                 'password' => 'required',
             ]);
 
-            $user = User::where('email', $validated['email'])->first();
-
-            if (!$user || !Hash::check($validated['password'], $user->password)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Invalid credentials',
-                    'errors' => [
-                        'email' => ['The provided credentials are incorrect.']
-                    ]
-                ], 401);
+            if (!Auth::attempt($validated)) {
+                return errorResponse('Invalid credentials', 401);
             }
 
-            $token = $user->createToken('auth-token')->plainTextToken;
+            $user = Auth::user();
+            $token = $user->createToken('auth_token')->plainTextToken;
 
-            return response()->json([
-                'success' => true,
-                'user' => $user,
+            return successResponse([
+                'user' => new UserResource($user),
                 'token' => $token,
-                'message' => 'Login successful'
-            ]);
+                'token_type' => 'Bearer'
+            ], 'Login successful');
 
         } catch (ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed',
-                'errors' => $e->errors()
-            ], 422);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Login failed',
-                'error' => $e->getMessage()
-            ], 500);
+            return validationResponse($e->errors());
         }
     }
 
     /**
-     * Logout user
+     * Get authenticated user.
      */
-    public function logout(Request $request)
+    public function user(Request $request): JsonResponse
     {
-        try {
-            $request->user()->currentAccessToken()->delete();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Logout successful'
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Logout failed',
-                'error' => $e->getMessage()
-            ], 500);
-        }
+        return successResponse(
+            new UserResource($request->user()),
+            'User retrieved successfully'
+        );
     }
 
     /**
-     * Get authenticated user
+     * Logout user.
      */
-    public function user(Request $request)
+    public function logout(Request $request): JsonResponse
+    {
+        $request->user()->currentAccessToken()->delete();
+
+        return successResponse(null, 'Logout successful');
+    }
+
+    /**
+     * Logout from all devices.
+     */
+    public function logoutAll(Request $request): JsonResponse
+    {
+        $request->user()->tokens()->delete();
+
+        return successResponse(null, 'Logged out from all devices');
+    }
+
+    /**
+     * Update user profile.
+     */
+    public function updateProfile(Request $request): JsonResponse
     {
         try {
-            return response()->json([
-                'success' => true,
-                'user' => $request->user()
+            $user = $request->user();
+            
+            $validated = $request->validate([
+                'name' => 'sometimes|string|max:255',
+                'email' => 'sometimes|email|max:255|unique:users,email,' . $user->id,
+                'current_password' => 'required_with:password',
+                'password' => 'sometimes|string|min:8|confirmed',
             ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to get user information',
-                'error' => $e->getMessage()
-            ], 500);
+
+            // Check current password if updating password
+            if ($request->has('password')) {
+                if (!Hash::check($request->current_password, $user->password)) {
+                    return errorResponse('Current password is incorrect', 400);
+                }
+                $validated['password'] = Hash::make($validated['password']);
+            }
+
+            // Remove current_password from validated data
+            unset($validated['current_password']);
+
+            $user->update($validated);
+
+            return successResponse(
+                new UserResource($user),
+                'Profile updated successfully'
+            );
+
+        } catch (ValidationException $e) {
+            return validationResponse($e->errors());
         }
     }
 }

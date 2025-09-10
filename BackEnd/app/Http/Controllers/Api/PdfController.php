@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Pdf;
+use App\Http\Requests\StorePdfRequest;
+use App\Http\Requests\UpdatePdfRequest;
+use App\Http\Resources\PdfResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Validation\ValidationException;
 
 class PdfController extends Controller
 {
@@ -15,46 +17,28 @@ class PdfController extends Controller
      */
     public function index(): JsonResponse
     {
-        $pdfs = Pdf::with(['pages', 'attachments', 'settings'])
+        $pdfs = Pdf::with(['pages', 'attachments'])
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
-        return response()->json([
-            'success' => true,
-            'data' => $pdfs,
-            'message' => 'PDFs retrieved successfully'
-        ]);
+        return successResponse(
+            PdfResource::collection($pdfs),
+            'PDFs retrieved successfully'
+        );
     }
 
     /**
      * Store a newly created PDF.
      */
-    public function store(Request $request): JsonResponse
+    public function store(StorePdfRequest $request): JsonResponse
     {
-        try {
-            $validated = $request->validate([
-                'name' => 'required|string|max:255',
-                'cover' => 'nullable|array',
-                'header' => 'nullable|array',
-                'footer' => 'nullable|array',
-                'background_image' => 'nullable|array',
-            ]);
+        $pdf = Pdf::create($request->validated());
 
-            $pdf = Pdf::create($validated);
-
-            return response()->json([
-                'success' => true,
-                'data' => $pdf->load(['pages', 'attachments', 'settings']),
-                'message' => 'PDF created successfully'
-            ], 201);
-
-        } catch (ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed',
-                'errors' => $e->errors()
-            ], 422);
-        }
+        return successResponse(
+            new PdfResource($pdf->load(['pages', 'attachments'])),
+            'PDF created successfully',
+            201
+        );
     }
 
     /**
@@ -62,60 +46,35 @@ class PdfController extends Controller
      */
     public function show(string $id): JsonResponse
     {
-        $pdf = Pdf::with(['pages.sections', 'attachments', 'settings'])->find($id);
+        $pdf = Pdf::with(['pages.sections', 'attachments'])->find($id);
 
         if (!$pdf) {
-            return response()->json([
-                'success' => false,
-                'message' => 'PDF not found'
-            ], 404);
+            return errorResponse('PDF not found', 404);
         }
 
-        return response()->json([
-            'success' => true,
-            'data' => $pdf,
-            'message' => 'PDF retrieved successfully'
-        ]);
+        return successResponse(
+            new PdfResource($pdf),
+            'PDF retrieved successfully'
+        );
     }
 
     /**
      * Update the specified PDF.
      */
-    public function update(Request $request, string $id): JsonResponse
+    public function update(UpdatePdfRequest $request, string $id): JsonResponse
     {
         $pdf = Pdf::find($id);
 
         if (!$pdf) {
-            return response()->json([
-                'success' => false,
-                'message' => 'PDF not found'
-            ], 404);
+            return errorResponse('PDF not found', 404);
         }
 
-        try {
-            $validated = $request->validate([
-                'name' => 'sometimes|required|string|max:255',
-                'cover' => 'nullable|array',
-                'header' => 'nullable|array',
-                'footer' => 'nullable|array',
-                'background_image' => 'nullable|array',
-            ]);
+        $pdf->update($request->validated());
 
-            $pdf->update($validated);
-
-            return response()->json([
-                'success' => true,
-                'data' => $pdf->load(['pages.sections', 'attachments', 'settings']),
-                'message' => 'PDF updated successfully'
-            ]);
-
-        } catch (ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed',
-                'errors' => $e->errors()
-            ], 422);
-        }
+        return successResponse(
+            new PdfResource($pdf->load(['pages.sections', 'attachments'])),
+            'PDF updated successfully'
+        );
     }
 
     /**
@@ -126,18 +85,15 @@ class PdfController extends Controller
         $pdf = Pdf::find($id);
 
         if (!$pdf) {
-            return response()->json([
-                'success' => false,
-                'message' => 'PDF not found'
-            ], 404);
+            return errorResponse('PDF not found', 404);
         }
 
         $pdf->delete();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'PDF deleted successfully'
-        ]);
+        return successResponse(
+            null,
+            'PDF deleted successfully'
+        );
     }
 
     /**
@@ -145,21 +101,17 @@ class PdfController extends Controller
      */
     public function getLastPdf(): JsonResponse
     {
-        $pdf = Pdf::with(['pages.sections', 'attachments', 'settings'])
+        $pdf = Pdf::with(['pages.sections', 'attachments'])
             ->latest()
             ->first();
 
         if (!$pdf) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No PDF found'
-            ], 404);
+            return errorResponse('No PDF found', 404);
         }
 
-        return response()->json([
-            'success' => true,
-            'data' => $pdf,
-            'message' => 'Last PDF retrieved successfully'
-        ]);
+        return successResponse(
+            new PdfResource($pdf),
+            'Last PDF retrieved successfully'
+        );
     }
 }

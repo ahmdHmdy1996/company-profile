@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreSectionRequest extends FormRequest
+class UpdatePdfRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,9 +22,11 @@ class StoreSectionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'page_id' => 'required|exists:pages,id',
-            'data' => 'required|array',
-            'order' => 'nullable|integer|min:0',
+            'name' => 'sometimes|required|string|max:255',
+            'cover' => 'nullable|array',
+            'header' => 'nullable|array',
+            'footer' => 'nullable|array',
+            'background_image' => 'nullable|array',
         ];
     }
 
@@ -36,12 +38,9 @@ class StoreSectionRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'page_id.required' => 'Page ID is required.',
-            'page_id.exists' => 'The selected page does not exist.',
-            'data.required' => 'Section data is required.',
-            'data.array' => 'Section data must be an array.',
-            'order.integer' => 'Order must be an integer.',
-            'order.min' => 'Order must be at least 0.',
+            'name.required' => 'PDF name is required.',
+            'name.string' => 'PDF name must be a string.',
+            'name.max' => 'PDF name cannot exceed 255 characters.',
         ];
     }
 }

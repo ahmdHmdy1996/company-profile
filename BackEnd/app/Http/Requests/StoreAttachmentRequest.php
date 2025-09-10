@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StorePageRequest extends FormRequest
+class StoreAttachmentRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,11 +22,9 @@ class StorePageRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'file' => 'required|file|mimes:jpeg,png,jpg,gif,webp,pdf,doc,docx|max:10240', // 10MB
             'pdf_id' => 'required|exists:pdfs,id',
-            'has_header' => 'required|exists:pdfs,id',
-            'has_footer' => 'required|exists:pdfs,id',
-            'title' => 'required|string|max:255',
-            'order' => 'nullable|integer|min:0',
+            'order' => 'nullable|integer|min:0'
         ];
     }
 
@@ -38,15 +36,12 @@ class StorePageRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'file.required' => 'File is required.',
+            'file.file' => 'The uploaded file is not valid.',
+            'file.mimes' => 'File must be of type: jpeg, png, jpg, gif, webp, pdf, doc, docx.',
+            'file.max' => 'File size cannot exceed 10MB.',
             'pdf_id.required' => 'PDF ID is required.',
             'pdf_id.exists' => 'The selected PDF does not exist.',
-            'has_header.required' => 'Header PDF ID is required.',
-            'has_header.exists' => 'The selected header PDF does not exist.',
-            'has_footer.required' => 'Footer PDF ID is required.',
-            'has_footer.exists' => 'The selected footer PDF does not exist.',
-            'title.required' => 'Page title is required.',
-            'title.string' => 'Page title must be a string.',
-            'title.max' => 'Page title cannot exceed 255 characters.',
             'order.integer' => 'Order must be an integer.',
             'order.min' => 'Order must be at least 0.',
         ];

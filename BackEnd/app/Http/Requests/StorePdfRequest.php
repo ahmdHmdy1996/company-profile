@@ -11,7 +11,7 @@ class StorePdfRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,25 @@ class StorePdfRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'name' => 'required|string|max:255',
+            'cover' => 'nullable|array',
+            'header' => 'nullable|array',
+            'footer' => 'nullable|array',
+            'background_image' => 'nullable|array',
+        ];
+    }
+
+    /**
+     * Get custom messages for validator errors.
+     *
+     * @return array
+     */
+    public function messages(): array
+    {
+        return [
+            'name.required' => 'PDF name is required.',
+            'name.string' => 'PDF name must be a string.',
+            'name.max' => 'PDF name cannot exceed 255 characters.',
         ];
     }
 }

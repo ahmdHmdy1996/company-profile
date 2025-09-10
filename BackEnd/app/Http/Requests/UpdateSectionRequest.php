@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreSectionRequest extends FormRequest
+class UpdateSectionRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,9 +22,8 @@ class StoreSectionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'page_id' => 'required|exists:pages,id',
-            'data' => 'required|array',
-            'order' => 'nullable|integer|min:0',
+            'data' => 'sometimes|required|array',
+            'order' => 'sometimes|integer|min:0',
         ];
     }
 
@@ -36,8 +35,6 @@ class StoreSectionRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'page_id.required' => 'Page ID is required.',
-            'page_id.exists' => 'The selected page does not exist.',
             'data.required' => 'Section data is required.',
             'data.array' => 'Section data must be an array.',
             'order.integer' => 'Order must be an integer.',
