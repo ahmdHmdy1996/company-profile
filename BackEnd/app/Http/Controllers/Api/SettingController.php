@@ -18,16 +18,16 @@ class SettingController extends Controller
     public function index(Request $request): JsonResponse
     {
         $query = Setting::query();
-        
+
         // Filter by category if provided
         if ($request->has('category')) {
             $query->where('category', $request->category);
         }
-        
+
         $settings = $query->orderBy('category')
                           ->orderBy('key')
                           ->get();
-        
+
         return successResponse(
             SettingResource::collection($settings),
             'Settings retrieved successfully'
@@ -65,7 +65,7 @@ class SettingController extends Controller
     public function showByKey(string $key): JsonResponse
     {
         $setting = Setting::where('key', $key)->first();
-        
+
         if (!$setting) {
             return errorResponse('Setting not found', 404);
         }
@@ -95,7 +95,7 @@ class SettingController extends Controller
     public function updateByKey(UpdateSettingRequest $request, string $key): JsonResponse
     {
         $setting = Setting::where('key', $key)->first();
-        
+
         if (!$setting) {
             return errorResponse('Setting not found', 404);
         }

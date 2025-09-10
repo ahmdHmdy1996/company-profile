@@ -20,16 +20,16 @@ class AttachmentController extends Controller
     public function index(Request $request): JsonResponse
     {
         $query = Attachment::query();
-        
+
         // Filter by PDF if needed
         if ($request->has('pdf_id')) {
             $query->where('pdf_id', $request->pdf_id);
         }
-        
+
         $attachments = $query->orderBy('order', 'asc')
                             ->orderBy('created_at', 'desc')
                             ->paginate(20);
-        
+
         return successResponse(
             AttachmentResource::collection($attachments),
             'Attachments retrieved successfully'

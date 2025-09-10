@@ -111,7 +111,7 @@ class AuthController extends Controller
     {
         try {
             $user = $request->user();
-            
+
             $validated = $request->validate([
                 'name' => 'sometimes|string|max:255',
                 'email' => 'sometimes|email|max:255|unique:users,email,' . $user->id,

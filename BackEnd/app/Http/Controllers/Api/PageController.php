@@ -18,7 +18,7 @@ class PageController extends Controller
     public function index(Request $request): JsonResponse
     {
         $pdfId = $request->query('pdf_id');
-        
+
         if (!$pdfId) {
             return errorResponse('PDF ID is required', 400);
         }

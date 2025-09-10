@@ -18,7 +18,7 @@ class SectionController extends Controller
     public function index(Request $request): JsonResponse
     {
         $pageId = $request->query('page_id');
-        
+
         if (!$pageId) {
             return errorResponse('Page ID is required', 400);
         }
