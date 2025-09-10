@@ -17,14 +17,8 @@ class Attachment extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-        'filename',
-        'original_name',
+        'pdf_id',
         'path',
-        'size',
-        'mime_type',
-        'description',
-        'company_profile_id',
-        'user_id',
         'order'
     ];
 
@@ -34,7 +28,6 @@ class Attachment extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'size' => 'integer',
         'order' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
@@ -46,24 +39,15 @@ class Attachment extends Model
      * @var array
      */
     protected $appends = [
-        'url',
-        'formatted_size'
+        'url'
     ];
 
     /**
-     * Get the company profile that owns the attachment.
+     * Get the PDF that owns the attachment.
      */
-    public function companyProfile(): BelongsTo
+    public function pdf(): BelongsTo
     {
-        return $this->belongsTo(CompanyProfile::class);
-    }
-
-    /**
-     * Get the user that owns the attachment.
-     */
-    public function user(): BelongsTo
-    {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Pdf::class);
     }
 
     /**
@@ -71,30 +55,7 @@ class Attachment extends Model
      */
     public function getUrlAttribute(): string
     {
-        return Storage::disk('public')->url($this->path);
-    }
-
-    /**
-     * Get the formatted size attribute.
-     */
-    public function getFormattedSizeAttribute(): string
-    {
-        $bytes = $this->size;
-        $units = ['B', 'KB', 'MB', 'GB', 'TB'];
-        
-        for ($i = 0; $bytes > 1024 && $i < count($units) - 1; $i++) {
-            $bytes /= 1024;
-        }
-        
-        return round($bytes, 2) . ' ' . $units[$i];
-    }
-
-    /**
-     * Check if the attachment is an image.
-     */
-    public function isImage(): bool
-    {
-        return str_starts_with($this->mime_type, 'image/');
+        return asset('storage/' . $this->path);
     }
 
     /**
@@ -102,23 +63,24 @@ class Attachment extends Model
      */
     public function getExtension(): string
     {
-        return pathinfo($this->original_name, PATHINFO_EXTENSION);
+        return pathinfo($this->path, PATHINFO_EXTENSION);
     }
 
     /**
-     * Scope a query to only include attachments for a specific company profile.
+     * Check if the attachment is an image.
      */
-    public function scopeForCompanyProfile($query, $companyProfileId)
+    public function isImage(): bool
     {
-        return $query->where('company_profile_id', $companyProfileId);
+        $imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'];
+        return in_array(strtolower($this->getExtension()), $imageExtensions);
     }
 
     /**
-     * Scope a query to only include attachments for a specific user.
+     * Scope a query to only include attachments for a specific PDF.
      */
-    public function scopeForUser($query, $userId)
+    public function scopeForPdf($query, $pdfId)
     {
-        return $query->where('user_id', $userId);
+        return $query->where('pdf_id', $pdfId);
     }
 
     /**

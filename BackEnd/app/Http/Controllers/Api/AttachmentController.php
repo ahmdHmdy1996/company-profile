@@ -19,21 +19,16 @@ class AttachmentController extends Controller
     {
         try {
             $query = Attachment::query();
-            
-            // Filter by user if needed
-            if ($request->has('user_id')) {
-                $query->where('user_id', $request->user_id);
+
+            // Filter by PDF if needed
+            if ($request->has('pdf_id')) {
+                $query->where('pdf_id', $request->pdf_id);
             }
-            
-            // Filter by company profile if needed
-            if ($request->has('company_profile_id')) {
-                $query->where('company_profile_id', $request->company_profile_id);
-            }
-            
+
             $attachments = $query->orderBy('order', 'asc')
                                 ->orderBy('created_at', 'desc')
                                 ->paginate(20);
-            
+
             return response()->json([
                 'success' => true,
                 'data' => $attachments,
@@ -55,9 +50,8 @@ class AttachmentController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                'file' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:5120', // 5MB
-                'description' => 'nullable|string|max:500',
-                'company_profile_id' => 'nullable|exists:company_profiles,id',
+                'file' => 'required|file|mimes:jpeg,png,jpg,gif,webp,pdf,doc,docx|max:10240', // 10MB
+                'pdf_id' => 'required|exists:pdfs,id',
                 'order' => 'nullable|integer|min:0'
             ]);
 
@@ -73,16 +67,17 @@ class AttachmentController extends Controller
             $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
             $path = $file->storeAs('attachments', $filename, 'public');
 
+            // Set default order if not provided
+            $order = $request->order;
+            if ($order === null) {
+                $lastOrder = Attachment::where('pdf_id', $request->pdf_id)->max('order');
+                $order = $lastOrder ? $lastOrder + 1 : 0;
+            }
+
             $attachment = Attachment::create([
-                'filename' => $filename,
-                'original_name' => $file->getClientOriginalName(),
+                'pdf_id' => $request->pdf_id,
                 'path' => $path,
-                'size' => $file->getSize(),
-                'mime_type' => $file->getMimeType(),
-                'description' => $request->description,
-                'company_profile_id' => $request->company_profile_id,
-                'user_id' => auth()->id(),
-                'order' => $request->order ?? 0
+                'order' => $order
             ]);
 
             return response()->json([
@@ -126,7 +121,6 @@ class AttachmentController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                'description' => 'nullable|string|max:500',
                 'order' => 'nullable|integer|min:0'
             ]);
 
@@ -138,7 +132,7 @@ class AttachmentController extends Controller
                 ], 422);
             }
 
-            $attachment->update($request->only(['description', 'order']));
+            $attachment->update($request->only(['order']));
 
             return response()->json([
                 'success' => true,
@@ -193,7 +187,8 @@ class AttachmentController extends Controller
                 ], 404);
             }
 
-            return Storage::disk('public')->download($attachment->path, $attachment->original_name);
+            $fileName = basename($attachment->path);
+            return response()->download(storage_path('app/public/' . $attachment->path), $fileName);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

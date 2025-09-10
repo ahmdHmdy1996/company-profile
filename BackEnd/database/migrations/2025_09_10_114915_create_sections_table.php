@@ -11,13 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('attachments', function (Blueprint $table) {
+        Schema::create('sections', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('pdf_id')->constrained('pdfs')->onDelete('cascade');
-            $table->string('path');
+            $table->foreignId('page_id')->constrained('pages')->onDelete('cascade');
+            $table->json('data');
             $table->integer('order')->default(0);
             $table->timestamps();
-            $table->index(['pdf_id', 'order']);
         });
     }
 
@@ -26,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('attachments');
+        Schema::dropIfExists('sections');
     }
 };

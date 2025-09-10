@@ -11,17 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('company_profiles', function (Blueprint $table) {
+        Schema::create('pdfs', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->string('template_id');
-            $table->string('name')->nullable();
-            $table->text('description')->nullable();
-            $table->longText('data')->nullable();
+            $table->string('name');
+            $table->json('cover')->nullable();
+            $table->json('header')->nullable();
+            $table->json('footer')->nullable();
+            $table->json('background_image')->nullable();
             $table->timestamps();
-            $table->softDeletes();
 
-            $table->index('template_id');
         });
     }
 

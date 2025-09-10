@@ -11,18 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('projects', function (Blueprint $table) {
+        Schema::create('pages', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('company_profile_id')->constrained('company_profiles')->onDelete('cascade');
+            $table->foreignId('pdf_id')->constrained('pdfs')->onDelete('cascade');
+            $table->foreignId('has_header')->constrained('pdfs')->onDelete('cascade');
+            $table->foreignId('has_footer')->constrained('pdfs')->onDelete('cascade');
             $table->string('title');
-            $table->string('subtitle')->nullable();
-            $table->string('image_path')->nullable();
-            $table->integer('current_page')->default(1);
-            $table->integer('total_pages')->default(1);
             $table->integer('order')->default(0);
             $table->timestamps();
-            
-            $table->index(['company_profile_id', 'order']);
         });
     }
 
@@ -31,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('projects');
+        Schema::dropIfExists('pages');
     }
 };

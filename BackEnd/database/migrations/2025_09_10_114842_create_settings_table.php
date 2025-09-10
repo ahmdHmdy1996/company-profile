@@ -11,9 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('company_settings', function (Blueprint $table) {
+        Schema::create('settings', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('company_profile_id')->constrained('company_profiles')->onDelete('cascade');
             $table->string('company_name')->nullable();
             $table->string('company_email')->nullable();
             $table->string('company_phone')->nullable();
