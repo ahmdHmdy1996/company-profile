@@ -23,7 +23,7 @@ class StoreSectionRequest extends FormRequest
     {
         return [
             'page_id' => 'required|exists:pages,id',
-            'data' => 'required|array',
+            'data' => 'required|json',
             'order' => 'nullable|integer|min:0',
         ];
     }
