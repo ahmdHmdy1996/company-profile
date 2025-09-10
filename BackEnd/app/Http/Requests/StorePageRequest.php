@@ -23,8 +23,8 @@ class StorePageRequest extends FormRequest
     {
         return [
             'pdf_id' => 'required|exists:pdfs,id',
-            'has_header' => 'required|exists:pdfs,id',
-            'has_footer' => 'required|exists:pdfs,id',
+            'has_header' => 'required|boolean',
+            'has_footer' => 'required|boolean',
             'title' => 'required|string|max:255',
             'order' => 'nullable|integer|min:0',
         ];

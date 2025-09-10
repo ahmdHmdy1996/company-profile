@@ -22,8 +22,8 @@ class UpdatePageRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'has_header' => 'sometimes|required|exists:pdfs,id',
-            'has_footer' => 'sometimes|required|exists:pdfs,id',
+            'has_header' => 'sometimes|required|boolean',
+            'has_footer' => 'sometimes|required|boolean',
             'title' => 'sometimes|required|string|max:255',
             'order' => 'sometimes|integer|min:0',
         ];
