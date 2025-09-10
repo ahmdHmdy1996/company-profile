@@ -26,7 +26,7 @@ class UpdatePdfRequest extends FormRequest
             'cover' => 'sometimes|nullable|json',
             'header' => 'sometimes|nullable|json',
             'footer' => 'sometimes|nullable|json',
-            'background_image' => 'sometimes|nullable|string|max:255',
+            'background_image' => 'sometimes|nullable|file',
         ];
     }
 
