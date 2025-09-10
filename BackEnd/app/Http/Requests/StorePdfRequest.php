@@ -26,7 +26,7 @@ class StorePdfRequest extends FormRequest
             'cover' => 'nullable|array',
             'header' => 'nullable|array',
             'footer' => 'nullable|array',
-            'background_image' => 'nullable|array',
+            'background_image' => 'nullable|string|max:255',
         ];
     }
 

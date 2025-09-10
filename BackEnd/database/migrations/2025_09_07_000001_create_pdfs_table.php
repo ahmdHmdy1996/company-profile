@@ -17,7 +17,7 @@ return new class extends Migration
             $table->json('cover')->nullable();
             $table->json('header')->nullable();
             $table->json('footer')->nullable();
-            $table->json('background_image')->nullable();
+            $table->string('background_image')->nullable();
             $table->timestamps();
 
         });

@@ -32,7 +32,7 @@ class Pdf extends Model
         'cover' => 'array',
         'header' => 'array',
         'footer' => 'array',
-        'background_image' => 'array',
+        'background_image' => 'string',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

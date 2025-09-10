@@ -23,10 +23,10 @@ class UpdatePdfRequest extends FormRequest
     {
         return [
             'name' => 'sometimes|required|string|max:255',
-            'cover' => 'nullable|array',
-            'header' => 'nullable|array',
-            'footer' => 'nullable|array',
-            'background_image' => 'nullable|array',
+            'cover' => 'sometimes|nullable|array',
+            'header' => 'sometimes|nullable|array',
+            'footer' => 'sometimes|nullable|array',
+            'background_image' => 'sometimes|nullable|string|max:255',
         ];
     }
 
