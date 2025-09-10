@@ -1,0 +1,1339 @@
+{
+    "info": {
+        "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+        "name": "Company Profile Backend API",
+        "description": "Complete API collection for the Company Profile Backend system. This collection includes authentication, PDF management, pages, sections, attachments, and settings management.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+        "_exporter_id": "12345678"
+    },
+    "item": [
+        {
+            "name": "Authentication",
+            "item": [
+                {
+                    "name": "Register User",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"John Doe\",\n    \"email\": \"john.doe@example.com\",\n    \"password\": \"password123\",\n    \"password_confirmation\": \"password123\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{BASE_URL}}/api/register",
+                            "host": ["{{BASE_URL}}"],
+                            "path": ["api", "register"]
+                        },
+                        "description": "Register a new user account"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Login User",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    const responseJson = pm.response.json();",
+                                    "    if (responseJson.data && responseJson.data.token) {",
+                                    "        pm.collectionVariables.set(\"AUTH_TOKEN\", responseJson.data.token);",
+                                    "    }",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"john.doe@example.com\",\n    \"password\": \"password123\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{BASE_URL}}/api/login",
+                            "host": ["{{BASE_URL}}"],
+                            "path": ["api", "login"]
+                        },
+                        "description": "Login user and get authentication token"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Current User",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{AUTH_TOKEN}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{BASE_URL}}/api/user",
+                            "host": ["{{BASE_URL}}"],
+                            "path": ["api", "user"]
+                        },
+                        "description": "Get current authenticated user information"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Logout User",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{AUTH_TOKEN}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{BASE_URL}}/api/logout",
+                            "host": ["{{BASE_URL}}"],
+                            "path": ["api", "logout"]
+                        },
+                        "description": "Logout current user and invalidate token"
+                    },
+                    "response": []
+                }
+            ],
+            "description": "Authentication endpoints for user registration, login, logout, and user information retrieval."
+        },
+        {
+            "name": "PDF Management",
+            "item": [
+                {
+                    "name": "Get All PDFs",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{AUTH_TOKEN}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{BASE_URL}}/api/pdfs",
+                            "host": ["{{BASE_URL}}"],
+                            "path": ["api", "pdfs"]
+                        },
+                        "description": "Retrieve all PDFs"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Last PDF",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{AUTH_TOKEN}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{BASE_URL}}/api/pdfs/last",
+                            "host": ["{{BASE_URL}}"],
+                            "path": ["api", "pdfs", "last"]
+                        },
+                        "description": "Get the most recently created PDF"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create PDF",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{AUTH_TOKEN}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"title\": \"Company Profile 2025\",\n    \"description\": \"Annual company profile document\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{BASE_URL}}/api/pdfs",
+                            "host": ["{{BASE_URL}}"],
+                            "path": ["api", "pdfs"]
+                        },
+                        "description": "Create a new PDF document"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get PDF by ID",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{AUTH_TOKEN}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{BASE_URL}}/api/pdfs/1",
+                            "host": ["{{BASE_URL}}"],
+                            "path": ["api", "pdfs", "1"]
+                        },
+                        "description": "Get a specific PDF by its ID"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update PDF",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{AUTH_TOKEN}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"title\": \"Updated Company Profile 2025\",\n    \"description\": \"Updated annual company profile document\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{BASE_URL}}/api/pdfs/1",
+                            "host": ["{{BASE_URL}}"],
+                            "path": ["api", "pdfs", "1"]
+                        },
+                        "description": "Update an existing PDF"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete PDF",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{AUTH_TOKEN}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{BASE_URL}}/api/pdfs/1",
+                            "host": ["{{BASE_URL}}"],
+                            "path": ["api", "pdfs", "1"]
+                        },
+                        "description": "Delete a PDF by its ID"
+                    },
+                    "response": []
+                }
+            ],
+            "description": "PDF document management endpoints for creating, reading, updating, and deleting PDF documents."
+        },
+        {
+            "name": "Page Management",
+            "item": [
+                {
+                    "name": "Get All Pages",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{AUTH_TOKEN}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{BASE_URL}}/api/pages?pdf_id=1",
+                            "host": ["{{BASE_URL}}"],
+                            "path": ["api", "pages"],
+                            "query": [
+                                {
+                                    "key": "pdf_id",
+                                    "value": "1",
+                                    "description": "Filter pages by PDF ID"
+                                }
+                            ]
+                        },
+                        "description": "Get all pages, optionally filtered by PDF ID"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Page",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{AUTH_TOKEN}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"pdf_id\": 1,\n    \"title\": \"Introduction Page\",\n    \"content\": \"This is the introduction page content\",\n    \"order\": 1\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{BASE_URL}}/api/pages",
+                            "host": ["{{BASE_URL}}"],
+                            "path": ["api", "pages"]
+                        },
+                        "description": "Create a new page"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Page by ID",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{AUTH_TOKEN}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{BASE_URL}}/api/pages/1",
+                            "host": ["{{BASE_URL}}"],
+                            "path": ["api", "pages", "1"]
+                        },
+                        "description": "Get a specific page by its ID"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Page",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{AUTH_TOKEN}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"title\": \"Updated Introduction Page\",\n    \"content\": \"This is the updated introduction page content\",\n    \"order\": 1\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{BASE_URL}}/api/pages/1",
+                            "host": ["{{BASE_URL}}"],
+                            "path": ["api", "pages", "1"]
+                        },
+                        "description": "Update an existing page"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Page",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{AUTH_TOKEN}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{BASE_URL}}/api/pages/1",
+                            "host": ["{{BASE_URL}}"],
+                            "path": ["api", "pages", "1"]
+                        },
+                        "description": "Delete a page by its ID"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Reorder Pages",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{AUTH_TOKEN}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"pages\": [\n        {\"id\": 2, \"order\": 1},\n        {\"id\": 1, \"order\": 2},\n        {\"id\": 3, \"order\": 3}\n    ]\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{BASE_URL}}/api/pages/reorder",
+                            "host": ["{{BASE_URL}}"],
+                            "path": ["api", "pages", "reorder"]
+                        },
+                        "description": "Reorder pages by updating their order values"
+                    },
+                    "response": []
+                }
+            ],
+            "description": "Page management endpoints for creating, reading, updating, deleting, and reordering pages within PDF documents."
+        },
+        {
+            "name": "Section Management",
+            "item": [
+                {
+                    "name": "Get All Sections",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{AUTH_TOKEN}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{BASE_URL}}/api/sections?page_id=1",
+                            "host": ["{{BASE_URL}}"],
+                            "path": ["api", "sections"],
+                            "query": [
+                                {
+                                    "key": "page_id",
+                                    "value": "1",
+                                    "description": "Filter sections by Page ID"
+                                }
+                            ]
+                        },
+                        "description": "Get all sections, optionally filtered by Page ID"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Section",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{AUTH_TOKEN}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"page_id\": 1,\n    \"title\": \"Company Overview\",\n    \"content\": \"This section contains information about our company\",\n    \"type\": \"text\",\n    \"order\": 1\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{BASE_URL}}/api/sections",
+                            "host": ["{{BASE_URL}}"],
+                            "path": ["api", "sections"]
+                        },
+                        "description": "Create a new section"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Section by ID",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{AUTH_TOKEN}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{BASE_URL}}/api/sections/1",
+                            "host": ["{{BASE_URL}}"],
+                            "path": ["api", "sections", "1"]
+                        },
+                        "description": "Get a specific section by its ID"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Section",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{AUTH_TOKEN}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"title\": \"Updated Company Overview\",\n    \"content\": \"This section contains updated information about our company\",\n    \"type\": \"text\",\n    \"order\": 1\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{BASE_URL}}/api/sections/1",
+                            "host": ["{{BASE_URL}}"],
+                            "path": ["api", "sections", "1"]
+                        },
+                        "description": "Update an existing section"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Section",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{AUTH_TOKEN}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{BASE_URL}}/api/sections/1",
+                            "host": ["{{BASE_URL}}"],
+                            "path": ["api", "sections", "1"]
+                        },
+                        "description": "Delete a section by its ID"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Reorder Sections",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{AUTH_TOKEN}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"sections\": [\n        {\"id\": 2, \"order\": 1},\n        {\"id\": 1, \"order\": 2},\n        {\"id\": 3, \"order\": 3}\n    ]\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{BASE_URL}}/api/sections/reorder",
+                            "host": ["{{BASE_URL}}"],
+                            "path": ["api", "sections", "reorder"]
+                        },
+                        "description": "Reorder sections by updating their order values"
+                    },
+                    "response": []
+                }
+            ],
+            "description": "Section management endpoints for creating, reading, updating, deleting, and reordering sections within pages."
+        },
+        {
+            "name": "Attachment Management",
+            "item": [
+                {
+                    "name": "Get All Attachments",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{AUTH_TOKEN}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{BASE_URL}}/api/attachments?pdf_id=1",
+                            "host": ["{{BASE_URL}}"],
+                            "path": ["api", "attachments"],
+                            "query": [
+                                {
+                                    "key": "pdf_id",
+                                    "value": "1",
+                                    "description": "Filter attachments by PDF ID"
+                                }
+                            ]
+                        },
+                        "description": "Get all attachments, optionally filtered by PDF ID"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Upload Attachment",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{AUTH_TOKEN}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "pdf_id",
+                                    "value": "1",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "title",
+                                    "value": "Company Logo",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "description",
+                                    "value": "Company logo image",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "file",
+                                    "type": "file",
+                                    "src": []
+                                },
+                                {
+                                    "key": "order",
+                                    "value": "1",
+                                    "type": "text"
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{BASE_URL}}/api/attachments",
+                            "host": ["{{BASE_URL}}"],
+                            "path": ["api", "attachments"]
+                        },
+                        "description": "Upload a new attachment file"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Attachment by ID",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{AUTH_TOKEN}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{BASE_URL}}/api/attachments/1",
+                            "host": ["{{BASE_URL}}"],
+                            "path": ["api", "attachments", "1"]
+                        },
+                        "description": "Get a specific attachment by its ID"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Attachment",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{AUTH_TOKEN}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "title",
+                                    "value": "Updated Company Logo",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "description",
+                                    "value": "Updated company logo image",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "file",
+                                    "type": "file",
+                                    "src": [],
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "order",
+                                    "value": "1",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "_method",
+                                    "value": "PUT",
+                                    "type": "text"
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{BASE_URL}}/api/attachments/1",
+                            "host": ["{{BASE_URL}}"],
+                            "path": ["api", "attachments", "1"]
+                        },
+                        "description": "Update an existing attachment (file upload is optional)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Attachment",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{AUTH_TOKEN}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{BASE_URL}}/api/attachments/1",
+                            "host": ["{{BASE_URL}}"],
+                            "path": ["api", "attachments", "1"]
+                        },
+                        "description": "Delete an attachment by its ID"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Download Attachment",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{AUTH_TOKEN}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{BASE_URL}}/api/attachments/1/download",
+                            "host": ["{{BASE_URL}}"],
+                            "path": ["api", "attachments", "1", "download"]
+                        },
+                        "description": "Download an attachment file"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Reorder Attachments",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{AUTH_TOKEN}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"attachments\": [\n        {\"id\": 2, \"order\": 1},\n        {\"id\": 1, \"order\": 2},\n        {\"id\": 3, \"order\": 3}\n    ]\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{BASE_URL}}/api/attachments/reorder",
+                            "host": ["{{BASE_URL}}"],
+                            "path": ["api", "attachments", "reorder"]
+                        },
+                        "description": "Reorder attachments by updating their order values"
+                    },
+                    "response": []
+                }
+            ],
+            "description": "Attachment management endpoints for uploading, reading, updating, deleting, downloading, and reordering file attachments."
+        },
+        {
+            "name": "Settings Management",
+            "item": [
+                {
+                    "name": "Get All Settings",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{AUTH_TOKEN}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{BASE_URL}}/api/settings",
+                            "host": ["{{BASE_URL}}"],
+                            "path": ["api", "settings"]
+                        },
+                        "description": "Get all application settings"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Setting",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{AUTH_TOKEN}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"key\": \"company_name\",\n    \"value\": \"Your Company Name\",\n    \"type\": \"string\",\n    \"description\": \"The name of the company\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{BASE_URL}}/api/settings",
+                            "host": ["{{BASE_URL}}"],
+                            "path": ["api", "settings"]
+                        },
+                        "description": "Create a new setting"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Setting by ID",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{AUTH_TOKEN}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{BASE_URL}}/api/settings/1",
+                            "host": ["{{BASE_URL}}"],
+                            "path": ["api", "settings", "1"]
+                        },
+                        "description": "Get a specific setting by its ID"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Setting",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{AUTH_TOKEN}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"key\": \"company_name\",\n    \"value\": \"Updated Company Name\",\n    \"type\": \"string\",\n    \"description\": \"The updated name of the company\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{BASE_URL}}/api/settings/1",
+                            "host": ["{{BASE_URL}}"],
+                            "path": ["api", "settings", "1"]
+                        },
+                        "description": "Update an existing setting"
+                    },
+                    "response": []
+                }
+            ],
+            "description": "Settings management endpoints for creating, reading, and updating application settings."
+        },
+        {
+            "name": "File Management",
+            "item": [
+                {
+                    "name": "Access Public File",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{BASE_URL}}/api/files/example-file.pdf",
+                            "host": ["{{BASE_URL}}"],
+                            "path": ["api", "files", "example-file.pdf"]
+                        },
+                        "description": "Access public files directly (no authentication required)"
+                    },
+                    "response": []
+                }
+            ],
+            "description": "Public file access endpoints for serving files from the public storage."
+        }
+    ],
+    "event": [
+        {
+            "listen": "prerequest",
+            "script": {
+                "type": "text/javascript",
+                "exec": [""]
+            }
+        },
+        {
+            "listen": "test",
+            "script": {
+                "type": "text/javascript",
+                "exec": [""]
+            }
+        }
+    ],
+    "variable": [
+        {
+            "key": "BASE_URL",
+            "value": "http://localhost:8000",
+            "type": "string"
+        },
+        {
+            "key": "AUTH_TOKEN",
+            "value": "",
+            "type": "string"
+        }
+    ]
+}

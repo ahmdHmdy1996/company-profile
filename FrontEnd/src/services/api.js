@@ -1,224 +1,282 @@
-// API service for company profile backend
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
+const API_BASE_URL = 'http://localhost:8000/api';
 
-class CompanyProfileAPI {
-  // Get authentication token from localStorage
-  static getToken() {
-    return localStorage.getItem("auth_token");
+class ApiService {
+  constructor() {
+    this.baseURL = API_BASE_URL;
+    this.token = localStorage.getItem('auth_token') || null;
   }
 
-  // Set authentication token in localStorage
-  static setToken(token) {
-    localStorage.setItem("auth_token", token);
+  setToken(token) {
+    this.token = token;
+    localStorage.setItem('auth_token', token);
   }
 
-  // Remove authentication token
-  static removeToken() {
-    localStorage.removeItem("auth_token");
-  }
-
-  // Get headers with authentication
-  static getHeaders(includeAuth = true) {
+  getHeaders() {
     const headers = {
-      "Content-Type": "application/json",
-      "Accept": "application/json"
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
     };
-
-    if (includeAuth) {
-      const token = this.getToken();
-      if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
-      }
+    
+    if (this.token) {
+      headers['Authorization'] = `Bearer ${this.token}`;
     }
-
+    
     return headers;
   }
 
-  // Authentication methods
-  static async register(name, email, password, passwordConfirmation) {
-    const response = await fetch(`${API_BASE_URL}/register`, {
-      method: "POST",
-      headers: this.getHeaders(false),
-      body: JSON.stringify({
-        name,
-        email,
-        password,
-        password_confirmation: passwordConfirmation,
-      }),
-    });
-
-    const data = await response.json();
+  getFormHeaders() {
+    const headers = {
+      'Accept': 'application/json'
+    };
     
-    if (!response.ok) {
-      throw new Error(data.message || "Registration failed");
+    if (this.token) {
+      headers['Authorization'] = `Bearer ${this.token}`;
     }
-
-    if (data.success && data.token) {
-      this.setToken(data.token);
-    }
-
-    return data;
-  }
-
-  static async login(email, password) {
-    const response = await fetch(`${API_BASE_URL}/login`, {
-      method: "POST",
-      headers: this.getHeaders(false),
-      body: JSON.stringify({
-        email,
-        password,
-      }),
-    });
-
-    const data = await response.json();
     
-    if (!response.ok) {
-      throw new Error(data.message || "Login failed");
-    }
-
-    if (data.success && data.token) {
-      this.setToken(data.token);
-    }
-
-    return data;
+    return headers;
   }
 
-  static async logout() {
-    const response = await fetch(`${API_BASE_URL}/logout`, {
-      method: "POST",
-      headers: this.getHeaders(),
+  async request(endpoint, options = {}) {
+    const url = `${this.baseURL}${endpoint}`;
+    const config = {
+      headers: {
+        ...this.getHeaders(),
+        ...options.headers,
+      },
+      ...options,
+    };
+
+    try {
+      const response = await fetch(url, config);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('API request failed:', error);
+      throw error;
+    }
+  }
+
+  // PDF Management
+  async createPDF(pdfData) {
+    // Check if pdfData is FormData
+    if (pdfData instanceof FormData) {
+      return this.request('/pdfs', {
+        method: 'POST',
+        headers: this.getFormHeaders(),
+        body: pdfData,
+      });
+    } else {
+      return this.request('/pdfs', {
+        method: 'POST',
+        body: JSON.stringify(pdfData),
+      });
+    }
+  }
+
+  async getPDFs() {
+    return this.request('/pdfs');
+  }
+
+  async getPDF(id) {
+    return this.request(`/pdfs/${id}`);
+  }
+
+  async updatePDF(id, pdfData) {
+    return this.request(`/pdfs/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(pdfData),
     });
-
-    this.removeToken();
-    
-    if (!response.ok) {
-      throw new Error("Logout failed");
-    }
-
-    return response.json();
   }
 
-  static async getUser() {
-    const response = await fetch(`${API_BASE_URL}/user`, {
-      method: "GET",
-      headers: this.getHeaders(),
+  async deletePDF(id) {
+    return this.request(`/pdfs/${id}`, {
+      method: 'DELETE',
     });
-
-    if (!response.ok) {
-      throw new Error("Failed to get user");
-    }
-
-    return response.json();
   }
 
-  // Image upload
-  static async uploadImage(file, type = "logo") {
+  // Generate PDF for viewing
+  async generatePDFView(id) {
+    return this.request(`/pdfs/${id}/generate`, {
+      method: 'POST',
+    });
+  }
+
+  // Download PDF
+  async downloadPDFFile(id) {
+    return this.request(`/pdfs/${id}/download`, {
+      method: 'GET',
+    });
+  }
+
+  // Page Management
+  async createPage(pageData) {
+    return this.request('/pages', {
+      method: 'POST',
+      body: JSON.stringify(pageData),
+    });
+  }
+
+  async getPages(pdfId = null) {
+    const endpoint = pdfId ? `/pages?pdf_id=${pdfId}` : '/pages';
+    return this.request(endpoint);
+  }
+
+  async getPage(id) {
+    return this.request(`/pages/${id}`);
+  }
+
+  async updatePage(id, pageData) {
+    return this.request(`/pages/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(pageData),
+    });
+  }
+
+  async deletePage(id) {
+    return this.request(`/pages/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Section Management
+  async createSection(sectionData) {
+    return this.request('/sections', {
+      method: 'POST',
+      body: JSON.stringify(sectionData),
+    });
+  }
+
+  async getSections(pageId = null) {
+    const endpoint = pageId ? `/sections?page_id=${pageId}` : '/sections';
+    return this.request(endpoint);
+  }
+
+  async getSection(id) {
+    return this.request(`/sections/${id}`);
+  }
+
+  async updateSection(id, sectionData) {
+    return this.request(`/sections/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(sectionData),
+    });
+  }
+
+  async deleteSection(id) {
+    return this.request(`/sections/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async updateSectionOrder(pageId, sectionsOrder) {
+    return this.request(`/pages/${pageId}/sections/reorder`, {
+      method: 'PUT',
+      body: JSON.stringify({ sections: sectionsOrder }),
+    });
+  }
+
+  // Module-specific endpoints
+  async getModuleData(moduleType, pageId = null) {
+    const endpoint = pageId 
+      ? `/modules/${moduleType}?page_id=${pageId}` 
+      : `/modules/${moduleType}`;
+    return this.request(endpoint);
+  }
+
+  async saveModuleData(moduleType, data) {
+    return this.request(`/modules/${moduleType}`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  // File Upload
+  async uploadFile(file, type = 'image') {
     const formData = new FormData();
-    formData.append("image", file);
-    formData.append("type", type);
+    formData.append('file', file);
+    formData.append('type', type);
 
-    const token = this.getToken();
-    const headers = {};
-    
-    if (token) {
-      headers["Authorization"] = `Bearer ${token}`;
-    }
-
-    const response = await fetch(`${API_BASE_URL}/upload-image`, {
-      method: "POST",
-      headers,
+    return this.request('/upload', {
+      method: 'POST',
+      headers: this.getFormHeaders(), // Use form headers for file upload
       body: formData,
     });
-
-    if (!response.ok) {
-      throw new Error("Failed to upload image");
-    }
-
-    return response.json();
   }
 
-  // Profile management
-  static async saveProfile(templateId, data, name = null, description = null) {
-    const response = await fetch(`${API_BASE_URL}/company-profiles`, {
-      method: "POST",
-      headers: this.getHeaders(),
-      body: JSON.stringify({
-        template_id: templateId,
-        data: data,
-        name: name,
-        description: description,
-      }),
+  // Design Templates
+  async getHeaderDesigns() {
+    return this.request('/designs/headers');
+  }
+
+  async getFooterDesigns() {
+    return this.request('/designs/footers');
+  }
+
+  async getSectionDesigns(moduleType = null) {
+    const endpoint = moduleType 
+      ? `/designs/sections?module=${moduleType}` 
+      : '/designs/sections';
+    return this.request(endpoint);
+  }
+
+  // PDF Generation
+  async generatePDF(pdfId) {
+    return this.request(`/pdfs/${pdfId}/generate`, {
+      method: 'POST',
     });
-
-    if (!response.ok) {
-      throw new Error("Failed to save profile");
-    }
-
-    return response.json();
   }
 
-  static async getLastProfile() {
-    const response = await fetch(`${API_BASE_URL}/company-profiles`, {
-      method: "GET",
-      headers: this.getHeaders(),
-    });
-    
-    if (!response.ok) {
-      throw new Error("Failed to fetch last profile");
-    }
-
-    return response.json();
+  async downloadPDF(pdfId) {
+    const url = `${this.baseURL}/pdfs/${pdfId}/download`;
+    window.open(url, '_blank');
   }
 
-  static async getProfile(id) {
-    const response = await fetch(`${API_BASE_URL}/company-profiles/${id}`, {
-      method: "GET",
-      headers: this.getHeaders(),
-    });
-    
-    if (!response.ok) {
-      throw new Error("Failed to fetch profile");
-    }
-
-    return response.json();
+  // Statistics and Analytics
+  async getStatistics() {
+    return this.request('/statistics');
   }
 
-  static async updateProfile(id, templateId, data, name = null, description = null) {
-    const response = await fetch(`${API_BASE_URL}/company-profiles/${id}`, {
-      method: "PUT",
-      headers: this.getHeaders(),
-      body: JSON.stringify({
-        template_id: templateId,
-        data: data,
-        name: name,
-        description: description,
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to update profile");
-    }
-
-    return response.json();
-  }
-
-  static async deleteProfile(id) {
-    const response = await fetch(`${API_BASE_URL}/company-profiles/${id}`, {
-      method: "DELETE",
-      headers: this.getHeaders(),
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to delete profile");
-    }
-
-    return response.json();
-  }
-
-  // Check if user is authenticated
-  static isAuthenticated() {
-    return !!this.getToken();
+  async getModuleStatistics(moduleType) {
+    return this.request(`/statistics/modules/${moduleType}`);
   }
 }
 
-export { CompanyProfileAPI };
+// Create and export a singleton instance
+const apiService = new ApiService();
+export { apiService };
+export default apiService;
+
+// Export individual methods for convenience
+export const {
+  createPDF,
+  getPDFs,
+  getPDF,
+  updatePDF,
+  deletePDF,
+  createPage,
+  getPages,
+  getPage,
+  updatePage,
+  deletePage,
+  createSection,
+  getSections,
+  getSection,
+  updateSection,
+  deleteSection,
+  updateSectionOrder,
+  getModuleData,
+  saveModuleData,
+  uploadFile,
+  getHeaderDesigns,
+  getFooterDesigns,
+  getSectionDesigns,
+  generatePDF,
+  downloadPDF,
+  getStatistics,
+  getModuleStatistics,
+} = apiService;

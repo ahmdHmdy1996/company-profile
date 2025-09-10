@@ -1,17 +1,70 @@
-import React from 'react';
-import AppRouter from './components/AppRouter';
-import { AuthProvider } from './contexts/AuthContext';
-import { LanguageProvider } from './contexts/LanguageContext';
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import Dashboard from './components/Dashboard';
+import Login from './components/Login';
+import PDFCreator from './pages/PDFCreator';
+import AboutUsModule from './pages/modules/AboutUsModule';
+import OurStaffModule from './pages/modules/OurStaffModule';
+import KeyClientsModule from './pages/modules/KeyClientsModule';
+import ServicesModule from './pages/modules/ServicesModule';
+import ProjectsModule from './pages/modules/ProjectsModule';
+import ToolsInstrumentsModule from './pages/modules/ToolsInstrumentsModule';
+import { apiService } from './services/api';
+import './index.css';
 
 function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Check if user is already authenticated
+    const token = localStorage.getItem('auth_token');
+    if (token) {
+      apiService.setToken(token);
+      setIsAuthenticated(true);
+    }
+    setLoading(false);
+  }, []);
+
+  const handleLogin = (token) => {
+    setIsAuthenticated(true);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('auth_token');
+    apiService.setToken(null);
+    setIsAuthenticated(false);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-lg">جاري التحميل...</div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Login onLogin={handleLogin} />;
+  }
+
   return (
-    <LanguageProvider>
-      <AuthProvider>
-        <div className="App">
-          <AppRouter />
-        </div>
-      </AuthProvider>
-    </LanguageProvider>
+    <Router>
+      <div className="App min-h-screen bg-gray-50">
+        <Routes>
+          <Route path="/" element={<Dashboard onLogout={handleLogout} />}>
+            <Route index element={<Navigate to="/pdf-creator" replace />} />
+            <Route path="pdf-creator" element={<PDFCreator />} />
+            <Route path="modules/about-us" element={<AboutUsModule />} />
+            <Route path="modules/our-staff" element={<OurStaffModule />} />
+            <Route path="modules/key-clients" element={<KeyClientsModule />} />
+            <Route path="modules/services" element={<ServicesModule />} />
+            <Route path="modules/projects" element={<ProjectsModule />} />
+            <Route path="modules/tools-instruments" element={<ToolsInstrumentsModule />} />
+          </Route>
+        </Routes>
+      </div>
+    </Router>
   );
 }
 

@@ -1,10 +1,13 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import HomePage from '../pages/HomePage';
-import ContentManagementPage from '../pages/ContentManagementPage';
-import GeneralSettingsPage from '../pages/GeneralSettingsPage';
-import AttachmentsSectionPage from '../pages/AttachmentsSectionPage';
-import MainSidebar from './MainSidebar';
+import DashboardPage from '../pages/DashboardPage';
+import PDFManagementPage from '../pages/PDFManagementPage';
+import AboutUsPage from '../pages/AboutUsPage';
+import OurStaffPage from '../pages/OurStaffPage';
+import KeyClientsPage from '../pages/KeyClientsPage';
+import OurServicesPage from '../pages/OurServicesPage';
+import OurProjectsPage from '../pages/OurProjectsPage';
+import ToolsInstrumentsPage from '../pages/ToolsInstrumentsPage';
 import LoginPage from '../pages/LoginPage';
 import { useAuth } from '../hooks/useAuth';
 import { AttachmentsProvider } from '../contexts/AttachmentsContext';
@@ -412,64 +415,17 @@ const AppRouter = () => {
         {/* Protected routes */}
         <Route path="/*" element={
           user ? (
-            <div className="flex h-screen bg-gray-50" dir="rtl">
-              {/* Main Sidebar */}
-              <MainSidebar 
-                activeSection={activePage}
-                onSectionChange={setActivePage}
-                user={user}
-                onLogout={logout}
-              />
-              
-              {/* Main Content Area */}
-              <div className="flex-1 flex flex-col">
-                <Routes>
-                  <Route path="/" element={<Navigate to="/home" replace />} />
-                  <Route path="/home" element={<HomePage />} />
-                  <Route path="/content" element={
-                    <ContentManagementPage 
-                      sections={sections}
-                      selectedPageId={selectedPageId}
-                      companyProfileId={companyProfileId}
-                      onSelectPage={handleSelectPage}
-                      onUpdatePage={handleUpdatePage}
-                      onAddSection={handleAddSection}
-                      onAddPage={handleAddPage}
-                      onDeleteSection={handleDeleteSection}
-                      onDeletePage={handleDeletePage}
-                    />
-                  } />
-                  <Route path="/content/:section" element={
-                    <ContentManagementPage 
-                      sections={sections}
-                      selectedPageId={selectedPageId}
-                      companyProfileId={companyProfileId}
-                      onSelectPage={handleSelectPage}
-                      onUpdatePage={handleUpdatePage}
-                      onAddSection={handleAddSection}
-                      onAddPage={handleAddPage}
-                      onDeleteSection={handleDeleteSection}
-                      onDeletePage={handleDeletePage}
-                    />
-                  } />
-                  <Route path="/attachments" element={
-                    <AttachmentsProvider>
-                      <AttachmentsSectionPage />
-                    </AttachmentsProvider>
-                  } />
-                  <Route path="/settings" element={
-                    <GeneralSettingsPage 
-                      companyData={companyData}
-                      onUpdateCompanyData={handleUpdateCompanyData}
-                      backgroundSettings={backgroundSettings}
-                      onUpdateBackgroundSettings={handleUpdateBackgroundSettings}
-                      themeSettings={themeSettings}
-                      onUpdateThemeSettings={handleUpdateThemeSettings}
-                    />
-                  } />
-                </Routes>
-              </div>
-            </div>
+            <Routes>
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/pdf-management" element={<PDFManagementPage />} />
+              <Route path="/about-us" element={<AboutUsPage />} />
+              <Route path="/our-staff" element={<OurStaffPage />} />
+              <Route path="/key-clients" element={<KeyClientsPage />} />
+              <Route path="/our-services" element={<OurServicesPage />} />
+              <Route path="/our-projects" element={<OurProjectsPage />} />
+              <Route path="/tools-instruments" element={<ToolsInstrumentsPage />} />
+            </Routes>
           ) : (
             <Navigate to="/login" replace />
           )
