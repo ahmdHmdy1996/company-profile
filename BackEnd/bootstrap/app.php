@@ -15,6 +15,9 @@ return Application::configure(basePath: dirname(__DIR__))
         // Ensure CORS headers are added for API and preflight (OPTIONS) requests
         // Requires config/cors.php (and config/cors.production.php when in production)
         $middleware->append(\Illuminate\Http\Middleware\HandleCors::class);
+        
+        // Force JSON responses for API routes
+        $middleware->append(\App\Http\Middleware\ForceJsonResponse::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

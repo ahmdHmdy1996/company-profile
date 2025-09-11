@@ -54,68 +54,37 @@ class Handler extends ExceptionHandler
     private function handleApiException($request, Throwable $e)
     {
         if ($e instanceof ValidationException) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed',
-                'errors' => $e->errors()
-            ], 422);
+            return validationResponse($e->errors());
         }
 
         if ($e instanceof ModelNotFoundException) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Resource not found',
-                'error' => 'The requested resource does not exist.'
-            ], 404);
+            return errorResponse('The requested resource does not exist.', 404);
         }
 
         if ($e instanceof AuthenticationException) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unauthenticated',
-                'error' => 'Authentication required to access this resource.'
-            ], 401);
+            return errorResponse('Authentication required to access this resource.', 401);
         }
 
         if ($e instanceof ThrottleRequestsException) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Too many requests',
-                'error' => 'Too many requests. Please try again later.'
-            ], 429);
+            return errorResponse('Too many requests. Please try again later.', 429);
         }
 
         if ($e instanceof NotFoundHttpException) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Not found',
-                'error' => 'The requested endpoint does not exist.'
-            ], 404);
+            return errorResponse('The requested endpoint does not exist.', 404);
         }
 
         if ($e instanceof MethodNotAllowedHttpException) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Method not allowed',
-                'error' => 'The HTTP method is not allowed for this endpoint.'
-            ], 405);
+            return errorResponse('The HTTP method is not allowed for this endpoint.', 405);
         }
 
         if ($e instanceof AccessDeniedHttpException) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Access denied',
-                'error' => 'You do not have permission to access this resource.'
-            ], 403);
+            return errorResponse('You do not have permission to access this resource.', 403);
         }
 
         // Handle other exceptions
         $statusCode = method_exists($e, 'getStatusCode') ? $e->getStatusCode() : 500;
+        $message = config('app.debug') ? $e->getMessage() : 'An unexpected error occurred.';
 
-        return response()->json([
-            'success' => false,
-            'message' => 'Internal server error',
-            'error' => config('app.debug') ? $e->getMessage() : 'An unexpected error occurred.'
-        ], $statusCode);
+        return errorResponse($message, $statusCode);
     }
 }
