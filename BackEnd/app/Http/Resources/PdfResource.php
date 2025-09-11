@@ -21,6 +21,7 @@ class PdfResource extends JsonResource
             'header' => $this->header,
             'footer' => $this->footer,
             'background_image' => $this->background_image,
+            'background_image_url' => $this->background_image ? asset('storage/' . $this->background_image) : null,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
             'pages' => PageResource::collection($this->whenLoaded('pages')),

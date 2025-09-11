@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import SectionDesignSelector from './SectionDesignSelector';
-import DynamicDataFields from './DynamicDataFields';
-import apiService from '../services/api';
+import React, { useState, useEffect } from "react";
+import SectionDesignSelector from "./SectionDesignSelector";
+import DynamicDataFields from "./DynamicDataFields";
+import apiService from "../services/api";
+import { createSectionPayload } from "../utils/htmlTemplateRenderer";
 
 const SectionManager = ({ pageId, moduleType }) => {
   const [sections, setSections] = useState([]);
@@ -9,7 +10,7 @@ const SectionManager = ({ pageId, moduleType }) => {
   const [sectionData, setSectionData] = useState({
     design: null,
     order: 1,
-    data: {}
+    data: {},
   });
 
   useEffect(() => {
@@ -18,150 +19,97 @@ const SectionManager = ({ pageId, moduleType }) => {
       const loadSections = async () => {
         try {
           const response = await apiService.getSections(pageId);
-          if (response.success) {
+          if (response.status) {
             setSections(response.data || []);
           }
         } catch (error) {
-          console.error('Error loading sections:', error);
+          console.error("Error loading sections:", error);
         }
       };
-      
+
       loadSections();
     }
   }, [pageId]);
 
   const handleInputChange = (field, value) => {
-    setSectionData(prev => ({
+    setSectionData((prev) => ({
       ...prev,
-      [field]: value
-    }));
-  };
-
-  const handleDataChange = (key, value) => {
-    setSectionData(prev => ({
-      ...prev,
-      data: {
-        ...prev.data,
-        [key]: value
-      }
+      [field]: value,
     }));
   };
 
   const handleDynamicDataChange = (newData) => {
-    setSectionData(prev => ({
+    setSectionData((prev) => ({
       ...prev,
-      data: newData
+      data: newData,
     }));
   };
 
   const handleCreateSection = async () => {
     if (!sectionData.design) {
-      alert('يرجى اختيار تصميم للقسم');
+      alert("يرجى اختيار تصميم للقسم");
       return;
     }
 
     try {
-      const sectionPayload = {
-        page_id: pageId,
-        design_id: sectionData.design.id,
-        design_name: sectionData.design.name,
-        data: sectionData.data,
-        order: sectionData.order
-      };
+      // Use the utility function to create section payload with rendered HTML
+      const sectionPayload = createSectionPayload(
+        sectionData.design,
+        sectionData.data,
+        pageId,
+        sectionData.order
+      );
+
+      // Log the payload to see what's being sent
+      console.log("Section payload being sent:", sectionPayload);
+      console.log("Parsed data preview:", JSON.parse(sectionPayload.data));
 
       const response = await apiService.createSection(sectionPayload);
-      
-      if (response.success) {
-        setSections(prev => [...prev, response.data]);
+
+      if (response.status) {
+        setSections((prev) => [...prev, response.data]);
         setSectionData({
           design: null,
           order: sections.length + 2,
-          data: {}
+          data: {},
         });
         setShowCreateForm(false);
-        alert('تم إنشاء القسم بنجاح!');
+        alert("تم إنشاء القسم بنجاح!");
       } else {
-        alert('حدث خطأ أثناء إنشاء القسم');
+        alert("حدث خطأ أثناء إنشاء القسم");
       }
     } catch (error) {
-      console.error('Error creating section:', error);
-      alert('حدث خطأ أثناء إنشاء القسم');
+      console.error("Error creating section:", error);
+      alert("حدث خطأ أثناء إنشاء القسم");
     }
   };
 
   const handleDesignSelect = (design) => {
-    setSectionData(prev => ({
+    setSectionData((prev) => ({
       ...prev,
       design,
-      data: design.defaultData || {}
+      data: design.defaultData || {},
     }));
   };
 
   const handleDeleteSection = async (sectionId) => {
-    if (!confirm('هل أنت متأكد من حذف هذا القسم؟')) {
+    if (!confirm("هل أنت متأكد من حذف هذا القسم؟")) {
       return;
     }
 
     try {
       const response = await apiService.deleteSection(sectionId);
-      
-      if (response.success) {
-        setSections(sections.filter(section => section.id !== sectionId));
-        alert('تم حذف القسم بنجاح!');
+
+      if (response.status) {
+        setSections(sections.filter((section) => section.id !== sectionId));
+        alert("تم حذف القسم بنجاح!");
       } else {
-        alert('حدث خطأ أثناء حذف القسم');
+        alert("حدث خطأ أثناء حذف القسم");
       }
     } catch (error) {
-      console.error('Error deleting section:', error);
-      alert('حدث خطأ أثناء حذف القسم');
+      console.error("Error deleting section:", error);
+      alert("حدث خطأ أثناء حذف القسم");
     }
-  };
-
-  const renderDataFields = () => {
-    if (!sectionData.design) return null;
-
-    return sectionData.design.fields?.map((field) => (
-      <div key={field.key}>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          {field.label}
-        </label>
-        {field.type === 'text' && (
-          <input
-            type="text"
-            value={sectionData.data[field.key] || ''}
-            onChange={(e) => handleDataChange(field.key, e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder={field.placeholder}
-          />
-        )}
-        {field.type === 'textarea' && (
-          <textarea
-            value={sectionData.data[field.key] || ''}
-            onChange={(e) => handleDataChange(field.key, e.target.value)}
-            rows={4}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder={field.placeholder}
-          />
-        )}
-        {field.type === 'image' && (
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => {
-              const file = e.target.files[0];
-              if (file) {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                  handleDataChange(field.key, event.target.result);
-                };
-                reader.readAsDataURL(file);
-              }
-            }}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        )}
-      </div>
-    ));
   };
 
   return (
@@ -177,8 +125,10 @@ const SectionManager = ({ pageId, moduleType }) => {
       {/* Create Section Form */}
       {showCreateForm && (
         <div className="bg-gray-50 rounded-lg p-6 space-y-4">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">إنشاء قسم جديد</h3>
-          
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">
+            إنشاء قسم جديد
+          </h3>
+
           {/* Section Order */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -187,7 +137,9 @@ const SectionManager = ({ pageId, moduleType }) => {
             <input
               type="number"
               value={sectionData.order}
-              onChange={(e) => handleInputChange('order', parseInt(e.target.value))}
+              onChange={(e) =>
+                handleInputChange("order", parseInt(e.target.value))
+              }
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               min="1"
             />
@@ -237,7 +189,9 @@ const SectionManager = ({ pageId, moduleType }) => {
 
       {/* Sections List */}
       <div className="space-y-2">
-        <h3 className="text-lg font-semibold text-gray-800">الأقسام الموجودة</h3>
+        <h3 className="text-lg font-semibold text-gray-800">
+          الأقسام الموجودة
+        </h3>
         {sections.length === 0 ? (
           <p className="text-gray-500 text-center py-4">لا توجد أقسام بعد</p>
         ) : (
@@ -250,14 +204,18 @@ const SectionManager = ({ pageId, moduleType }) => {
               >
                 <div className="flex justify-between items-start">
                   <div>
-                    <h4 className="font-medium text-gray-800">{section.design?.name}</h4>
-                    <p className="text-sm text-gray-600">الترتيب: {section.order}</p>
+                    <h4 className="font-medium text-gray-800">
+                      {section.design?.name}
+                    </h4>
+                    <p className="text-sm text-gray-600">
+                      الترتيب: {section.order}
+                    </p>
                   </div>
                   <div className="flex space-x-2 space-x-reverse">
                     <button className="text-blue-600 hover:text-blue-800 text-sm">
                       تعديل
                     </button>
-                    <button 
+                    <button
                       onClick={() => handleDeleteSection(section.id)}
                       className="text-red-600 hover:text-red-800 text-sm"
                     >

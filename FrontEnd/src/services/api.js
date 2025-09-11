@@ -244,6 +244,35 @@ class ApiService {
   async getModuleStatistics(moduleType) {
     return this.request(`/statistics/modules/${moduleType}`);
   }
+
+  // Settings Management
+  async getSettings() {
+    return this.request('/settings');
+  }
+
+  async createSetting(settingData) {
+    return this.request('/settings', {
+      method: 'POST',
+      body: JSON.stringify(settingData),
+    });
+  }
+
+  async getSetting(id) {
+    return this.request(`/settings/${id}`);
+  }
+
+  async updateSetting(id, settingData) {
+    return this.request(`/settings/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(settingData),
+    });
+  }
+
+  async deleteSetting(id) {
+    return this.request(`/settings/${id}`, {
+      method: 'DELETE',
+    });
+  }
 }
 
 // Create and export a singleton instance
@@ -279,4 +308,9 @@ export const {
   downloadPDF,
   getStatistics,
   getModuleStatistics,
+  getSettings,
+  createSetting,
+  getSetting,
+  updateSetting,
+  deleteSetting,
 } = apiService;

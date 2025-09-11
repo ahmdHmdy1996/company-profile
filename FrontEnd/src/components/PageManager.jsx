@@ -4,20 +4,21 @@ import apiService from '../services/api';
 const PageManager = ({ moduleType, onPageSelected, selectedPageId }) => {
   const [pages, setPages] = useState([]);
   const [pdfs, setPdfs] = useState([]);
+  const [selectedPdfId, setSelectedPdfId] = useState('');
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [pageData, setPageData] = useState({
     pdf_id: '',
-    name: '',
+    title: '',
     has_header: false,
     has_footer: false,
-    page_number: 1
+    order: 1
   });
 
   useEffect(() => {
     const loadPages = async () => {
       try {
-        const response = await apiService.getPages();
-        if (response.success) {
+        const response = await apiService.getPages(selectedPdfId || null);
+        if (response.status) {
           setPages(response.data || []);
         }
       } catch (error) {
@@ -28,7 +29,9 @@ const PageManager = ({ moduleType, onPageSelected, selectedPageId }) => {
     const loadPdfs = async () => {
       try {
         const response = await apiService.getPDFs();
-        if (response.success) {
+        if (response.status) {
+          console.log(response.data);
+          
           setPdfs(response.data || []);
         }
       } catch (error) {
@@ -38,17 +41,17 @@ const PageManager = ({ moduleType, onPageSelected, selectedPageId }) => {
     
     loadPages();
     loadPdfs();
-  }, []);
+  }, [selectedPdfId]);
 
   const handleInputChange = (field, value) => {
     setPageData(prev => ({
       ...prev,
-      [field]: value
+      [field]: field === 'pdf_id' ? parseInt(value) || '' : value
     }));
   };
 
   const handleCreatePage = async () => {
-    if (!pageData.name.trim()) {
+    if (!pageData.title.trim()) {
       alert('يرجى إدخال اسم الصفحة');
       return;
     }
@@ -59,16 +62,25 @@ const PageManager = ({ moduleType, onPageSelected, selectedPageId }) => {
     }
 
     try {
-      const response = await apiService.createPage(pageData);
+      const dataToSend = {
+        ...pageData,
+        has_header: pageData.has_header ? 1 : 0,
+        has_footer: pageData.has_footer ? 1 : 0
+      };
+      const response = await apiService.createPage(dataToSend);
       
-      if (response.success) {
-        setPages([...pages, response.data]);
+      if (response.status) {
+        // Reload pages to reflect current filter
+        const pagesResponse = await apiService.getPages(selectedPdfId || null);
+        if (pagesResponse.status) {
+          setPages(pagesResponse.data || []);
+        }
         setPageData({
           pdf_id: '',
-          name: '',
+          title: '',
           has_header: false,
           has_footer: false,
-          page_number: pages.length + 1
+          order: pages.length + 1
         });
         setShowCreateForm(false);
         alert('تم إنشاء الصفحة بنجاح!');
@@ -83,6 +95,25 @@ const PageManager = ({ moduleType, onPageSelected, selectedPageId }) => {
 
   return (
     <div className="space-y-4">
+      {/* PDF Filter */}
+      <div className="bg-white rounded-lg p-4 border border-gray-200">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          فلترة الصفحات حسب PDF
+        </label>
+        <select
+          value={selectedPdfId}
+          onChange={(e) => setSelectedPdfId(e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        >
+          <option value="">عرض جميع الصفحات</option>
+          {pdfs.map((pdf) => (
+            <option key={pdf.id} value={pdf.id}>
+              {pdf.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
       {/* Create Page Button */}
       <button
         onClick={() => setShowCreateForm(true)}
@@ -122,8 +153,8 @@ const PageManager = ({ moduleType, onPageSelected, selectedPageId }) => {
             </label>
             <input
               type="text"
-              value={pageData.name}
-              onChange={(e) => handleInputChange('name', e.target.value)}
+              value={pageData.title}
+              onChange={(e) => handleInputChange('title', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="أدخل اسم الصفحة"
             />
@@ -136,8 +167,8 @@ const PageManager = ({ moduleType, onPageSelected, selectedPageId }) => {
             </label>
             <input
               type="number"
-              value={pageData.page_number}
-              onChange={(e) => handleInputChange('page_number', parseInt(e.target.value) || 1)}
+              value={pageData.order}
+              onChange={(e) => handleInputChange('order', parseInt(e.target.value) || 1)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="أدخل رقم الصفحة"
             />
@@ -175,7 +206,7 @@ const PageManager = ({ moduleType, onPageSelected, selectedPageId }) => {
           <div className="flex space-x-3 space-x-reverse pt-4">
             <button
               onClick={handleCreatePage}
-              disabled={!pageData.pdf_id || !pageData.name}
+              disabled={!pageData.pdf_id || !pageData.title}
               className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
             >
               إنشاء الصفحة
@@ -192,9 +223,18 @@ const PageManager = ({ moduleType, onPageSelected, selectedPageId }) => {
 
       {/* Pages List */}
       <div className="space-y-2">
-        <h3 className="text-lg font-semibold text-gray-800">الصفحات الموجودة</h3>
+        <div className="flex justify-between items-center">
+          <h3 className="text-lg font-semibold text-gray-800">الصفحات الموجودة</h3>
+          {selectedPdfId && (
+            <span className="text-sm text-gray-600">
+              عرض صفحات: {pdfs.find(pdf => pdf.id === parseInt(selectedPdfId))?.name || 'غير محدد'}
+            </span>
+          )}
+        </div>
         {pages.length === 0 ? (
-          <p className="text-gray-500 text-center py-4">لا توجد صفحات بعد</p>
+          <p className="text-gray-500 text-center py-4">
+            {selectedPdfId ? 'لا توجد صفحات لهذا الـ PDF' : 'لا توجد صفحات بعد'}
+          </p>
         ) : (
           pages.map((page) => (
             <div
@@ -210,7 +250,7 @@ const PageManager = ({ moduleType, onPageSelected, selectedPageId }) => {
                 <div>
                   <h4 className="font-medium text-gray-800">{page.name}</h4>
                   <p className="text-sm text-gray-600">PDF ID: {page.pdf_id}</p>
-                  <p className="text-sm text-gray-600">رقم الصفحة: {page.page_number}</p>
+                  <p className="text-sm text-gray-600">رقم الصفحة: {page.order}</p>
                 </div>
                 <div className="flex space-x-2 space-x-reverse text-xs">
                   {page.has_header && (

@@ -9,6 +9,7 @@ import KeyClientsModule from './pages/modules/KeyClientsModule';
 import ServicesModule from './pages/modules/ServicesModule';
 import ProjectsModule from './pages/modules/ProjectsModule';
 import ToolsInstrumentsModule from './pages/modules/ToolsInstrumentsModule';
+import GeneralSettingsPage from './pages/GeneralSettingsPage';
 import { apiService } from './services/api';
 import './index.css';
 
@@ -61,6 +62,7 @@ function App() {
             <Route path="modules/services" element={<ServicesModule />} />
             <Route path="modules/projects" element={<ProjectsModule />} />
             <Route path="modules/tools-instruments" element={<ToolsInstrumentsModule />} />
+            <Route path="general-settings" element={<GeneralSettingsPage />} />
           </Route>
         </Routes>
       </div>
