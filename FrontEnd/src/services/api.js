@@ -13,8 +13,7 @@ class ApiService {
 
   getHeaders() {
     const headers = {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json'
+      
     };
     
     if (this.token) {
@@ -26,7 +25,7 @@ class ApiService {
 
   getFormHeaders() {
     const headers = {
-      'Accept': 'application/json'
+      
     };
     
     if (this.token) {
