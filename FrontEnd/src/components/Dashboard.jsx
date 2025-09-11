@@ -54,11 +54,7 @@ const Dashboard = ({ onLogout }) => {
       path: "/pdf-creator",
       icon: DocumentTextIcon,
     },
-    {
-      name: "الإعدادات العامة",
-      path: "/general-settings",
-      icon: Cog6ToothIcon,
-    },
+
     {
       name: "من نحن",
       path: "/modules/about-us",
@@ -89,6 +85,11 @@ const Dashboard = ({ onLogout }) => {
       path: "/modules/tools-instruments",
       icon: WrenchScrewdriverIcon,
     },
+    {
+      name: "الإعدادات العامة",
+      path: "/general-settings",
+      icon: Cog6ToothIcon,
+    },
   ];
 
   return (
@@ -103,16 +104,18 @@ const Dashboard = ({ onLogout }) => {
         />
 
         {/* Sidebar */}
-        <div className={`w-64 bg-white shadow-lg transition-all duration-300 `}>
+        <div
+          className={`w-64 py-2 pb-6 bg-white flex flex-col justify-between shadow-lg transition-all duration-300 `}
+        >
           <div className={`p-6 `}>
             <div className="flex justify-between items-center mb-8">
-              <h1 className="text-2xl font-bold text-gray-800">لوحة التحكم</h1>
-              <button
-                onClick={onLogout}
-                className="text-sm text-red-600 hover:text-red-800 transition-colors"
-              >
-                تسجيل الخروج
-              </button>
+              
+              <div>
+                <h1 className="text-xl font-bold text-gray-800">
+                  أدارة الملف التعريفي
+                </h1>
+                <span className="text-sm text-gray-500">Team Arabia Company</span>
+              </div>
             </div>
             <nav className="space-y-2">
               {menuItems.map((item) => {
@@ -125,7 +128,7 @@ const Dashboard = ({ onLogout }) => {
                     to={item.path}
                     className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
                       isActive
-                        ? "bg-blue-100 text-blue-700 border-r-4 border-blue-700"
+                        ? "bg-blue-700 text-white hover:text-white focus:outline-none"
                         : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                     }`}
                   >
@@ -135,6 +138,29 @@ const Dashboard = ({ onLogout }) => {
                 );
               })}
             </nav>
+          </div>
+          <div className="px-6">
+            <button
+              onClick={onLogout}
+              className="flex items-center justify-start  text-red-600 hover:text-red-800 transition-colors group"
+              title="تسجيل الخروج"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+                className="w-8 h-8 mr-2 group-hover:scale-110 transition-transform"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6A2.25 2.25 0 005.25 5.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M18 12H9m0 0l3-3m-3 3l3 3"
+                />
+              </svg>
+              <span className="sr-only">تسجيل الخروج</span>
+            </button>
           </div>
         </div>
 

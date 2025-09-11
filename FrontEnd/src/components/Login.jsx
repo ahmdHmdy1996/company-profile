@@ -1,44 +1,49 @@
-import React, { useState } from 'react';
-import { apiService } from '../services/api';
-import { DEFAULT_CREDENTIALS, MOCK_TOKEN } from '../config/auth';
+import React, { useState } from "react";
+import { apiService } from "../services/api";
+import { DEFAULT_CREDENTIALS, MOCK_TOKEN } from "../config/auth";
 
 const Login = ({ onLogin }) => {
   const [credentials, setCredentials] = useState({
-    email: '',
-    password: ''
+    email: "",
+    password: "",
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const handleChange = (e) => {
     setCredentials({
       ...credentials,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+    setError("");
 
     try {
       // Check if credentials match default ones (for demo purposes)
-      if (credentials.email === DEFAULT_CREDENTIALS.email && 
-          credentials.password === DEFAULT_CREDENTIALS.password) {
+      if (
+        credentials.email === DEFAULT_CREDENTIALS.email &&
+        credentials.password === DEFAULT_CREDENTIALS.password
+      ) {
         // Use mock token for demo
         apiService.setToken(MOCK_TOKEN);
         onLogin(MOCK_TOKEN);
       } else {
         // Try to authenticate with backend
-        const response = await fetch('http://localhost:8000/api/login', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
-          body: JSON.stringify(credentials)
-        });
+        const response = await fetch(
+          "https://backend-company-profile.codgoo.com/login",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            body: JSON.stringify(credentials),
+          }
+        );
 
         const data = await response.json();
 
@@ -46,17 +51,19 @@ const Login = ({ onLogin }) => {
           apiService.setToken(data.token);
           onLogin(data.token);
         } else {
-          setError(data.message || 'فشل في تسجيل الدخول');
+          setError(data.message || "فشل في تسجيل الدخول");
         }
       }
     } catch (err) {
       // If backend is not available, check demo credentials
-      if (credentials.email === DEFAULT_CREDENTIALS.email && 
-          credentials.password === DEFAULT_CREDENTIALS.password) {
+      if (
+        credentials.email === DEFAULT_CREDENTIALS.email &&
+        credentials.password === DEFAULT_CREDENTIALS.password
+      ) {
         apiService.setToken(MOCK_TOKEN);
         onLogin(MOCK_TOKEN);
       } else {
-        setError('بيانات تسجيل الدخول غير صحيحة');
+        setError("بيانات تسجيل الدخول غير صحيحة");
       }
     } finally {
       setLoading(false);
@@ -74,8 +81,12 @@ const Login = ({ onLogin }) => {
             للوصول إلى لوحة التحكم
           </p>
           <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-            <p className="text-sm text-blue-800 font-medium">بيانات تسجيل الدخول التجريبية:</p>
-            <p className="text-sm text-blue-600">البريد الإلكتروني: admin@company.com</p>
+            <p className="text-sm text-blue-800 font-medium">
+              بيانات تسجيل الدخول التجريبية:
+            </p>
+            <p className="text-sm text-blue-600">
+              البريد الإلكتروني: admin@company.com
+            </p>
             <p className="text-sm text-blue-600">كلمة المرور: password123</p>
           </div>
         </div>
@@ -114,9 +125,7 @@ const Login = ({ onLogin }) => {
           </div>
 
           {error && (
-            <div className="text-red-600 text-sm text-center">
-              {error}
-            </div>
+            <div className="text-red-600 text-sm text-center">{error}</div>
           )}
 
           <div>
@@ -125,7 +134,7 @@ const Login = ({ onLogin }) => {
               disabled={loading}
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
             >
-              {loading ? 'جاري تسجيل الدخول...' : 'تسجيل الدخول'}
+              {loading ? "جاري تسجيل الدخول..." : "تسجيل الدخول"}
             </button>
           </div>
         </form>
