@@ -26,7 +26,7 @@ class StorePdfRequest extends FormRequest
             'cover' => 'nullable|json',
             'header' => 'nullable|json',
             'footer' => 'nullable|json',
-            'background_image' => 'nullable|file',
+            'background_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240', // 10MB max
         ];
     }
 
@@ -41,6 +41,12 @@ class StorePdfRequest extends FormRequest
             'name.required' => 'PDF name is required.',
             'name.string' => 'PDF name must be a string.',
             'name.max' => 'PDF name cannot exceed 255 characters.',
+            'cover.json' => 'Cover content must be valid JSON.',
+            'header.json' => 'Header content must be valid JSON.',
+            'footer.json' => 'Footer content must be valid JSON.',
+            'background_image.image' => 'Background image must be a valid image file.',
+            'background_image.mimes' => 'Background image must be of type: jpeg, png, jpg, gif, or webp.',
+            'background_image.max' => 'Background image size cannot exceed 10MB.',
         ];
     }
 }

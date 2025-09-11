@@ -21,6 +21,14 @@ class PdfController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
+        // Add background image URLs
+        $pdfs->getCollection()->transform(function ($pdf) {
+            if ($pdf->background_image) {
+                $pdf->background_image_url = asset('storage/' . $pdf->background_image);
+            }
+            return $pdf;
+        });
+
         return successResponse(
             PdfResource::collection($pdfs),
             'PDFs retrieved successfully'
@@ -32,10 +40,28 @@ class PdfController extends Controller
      */
     public function store(StorePdfRequest $request): JsonResponse
     {
-        $pdf = Pdf::create($request->validated());
+        $validatedData = $request->validated();
+
+        // Handle background image upload
+        if ($request->hasFile('background_image')) {
+            $file = $request->file('background_image');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $path = $file->storeAs('background_images', $filename, 'public');
+            $validatedData['background_image'] = $path;
+        }
+
+        $pdf = Pdf::create($validatedData);
+
+        // Load relationships and add full image URL
+        $pdf->load(['pages', 'attachments']);
+
+        // Add full URL for background image if exists
+        if ($pdf->background_image) {
+            $pdf->background_image_url = asset('storage/' . $pdf->background_image);
+        }
 
         return successResponse(
-            new PdfResource($pdf->load(['pages', 'attachments'])),
+            new PdfResource($pdf),
             'PDF created successfully',
             201
         );
@@ -50,6 +76,11 @@ class PdfController extends Controller
 
         if (!$pdf) {
             return errorResponse('PDF not found', 404);
+        }
+
+        // Add full URL for background image if exists
+        if ($pdf->background_image) {
+            $pdf->background_image_url = asset('storage/' . $pdf->background_image);
         }
 
         return successResponse(
