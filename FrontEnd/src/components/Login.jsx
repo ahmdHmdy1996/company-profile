@@ -34,7 +34,7 @@ const Login = ({ onLogin }) => {
       } else {
         // Try to authenticate with backend
         const response = await fetch(
-          "https://backend-company-profile.codgoo.com/login",
+          "https://backend-company-profile.codgoo.com/api/login",
           {
             method: "POST",
             headers: {
@@ -46,6 +46,7 @@ const Login = ({ onLogin }) => {
         );
 
         const data = await response.json();
+console.log(data);
 
         if (response.ok) {
           apiService.setToken(data.token);
