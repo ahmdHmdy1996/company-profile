@@ -4,7 +4,7 @@ import FooterDesignTemplates from "../components/FooterDesignTemplates";
 import CoverDesignTemplates from "../components/CoverDesignTemplates";
 import BackgroundImageUploader from "../components/BackgroundImageUploader";
 import { apiService } from "../services/api";
-import { usePDFViewer } from "../components/Dashboard";
+import { usePDFViewer } from "../contexts/PDFViewerContext.js";
 import { processApiHtmlForDownload } from "../utils/htmlUtils";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
@@ -217,7 +217,7 @@ const PDFCreator = () => {
     }));
   };
 
-  const handleHeaderDesignSelect = (designId, htmlCode , ) => {
+  const handleHeaderDesignSelect = (designId, htmlCode) => {
     setPdfData((prevData) => ({
       ...prevData,
       header_design: designId,
@@ -385,7 +385,6 @@ const PDFCreator = () => {
                 <HeaderDesignTemplates
                   selectedDesign={pdfData.header_design}
                   onSelectDesign={handleHeaderDesignSelect}
-                 
                 />
               </div>
 

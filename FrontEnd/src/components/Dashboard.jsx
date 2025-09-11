@@ -1,5 +1,5 @@
-import React, { useState, createContext, useContext } from "react";
-import { Outlet, Link, useLocation } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import {
   DocumentTextIcon,
   UserGroupIcon,
@@ -11,20 +11,16 @@ import {
   Cog6ToothIcon,
 } from "@heroicons/react/24/outline";
 import PDFViewer from "./PDFViewer";
-
-// Create PDF Viewer Context
-const PDFViewerContext = createContext();
-
-export const usePDFViewer = () => {
-  const context = useContext(PDFViewerContext);
-  if (!context) {
-    throw new Error("usePDFViewer must be used within a PDFViewerProvider");
-  }
-  return context;
-};
+import { PDFViewerContext } from "../contexts/PDFViewerContext.js";
 
 const Dashboard = ({ onLogout }) => {
   const location = useLocation();
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (!localStorage.getItem("auth_token")) {
+      navigate("/login", { replace: true });
+    }
+  }, [navigate]);
   const [pdfViewer, setPdfViewer] = useState({
     isVisible: true, // Always visible
     pdfData: null,
@@ -109,12 +105,13 @@ const Dashboard = ({ onLogout }) => {
         >
           <div className={`p-6 `}>
             <div className="flex justify-between items-center mb-8">
-              
               <div>
                 <h1 className="text-xl font-bold text-gray-800">
                   أدارة الملف التعريفي
                 </h1>
-                <span className="text-sm text-gray-500">Team Arabia Company</span>
+                <span className="text-sm text-gray-500">
+                  Team Arabia Company
+                </span>
               </div>
             </div>
             <nav className="space-y-2">
