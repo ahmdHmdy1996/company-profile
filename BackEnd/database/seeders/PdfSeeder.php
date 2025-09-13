@@ -39,24 +39,24 @@ class PdfSeeder extends Seeder
         // Create sample pages
         $aboutPage = Page::create([
             'pdf_id' => $pdf->id,
-            'has_header' => $pdf->id,
-            'has_footer' => $pdf->id,
+            'has_header' => true,
+            'has_footer' => true  ,
             'title' => 'About Us',
             'order' => 0
         ]);
 
         $servicesPage = Page::create([
             'pdf_id' => $pdf->id,
-            'has_header' => $pdf->id,
-            'has_footer' => $pdf->id,
+            'has_header' => true,
+            'has_footer' => true    ,
             'title' => 'Our Services',
             'order' => 1
         ]);
 
         $contactPage = Page::create([
             'pdf_id' => $pdf->id,
-            'has_header' => $pdf->id,
-            'has_footer' => $pdf->id,
+            'has_header' => true,
+            'has_footer' => true,
             'title' => 'Contact Us',
             'order' => 2
         ]);
