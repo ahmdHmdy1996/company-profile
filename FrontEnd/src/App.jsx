@@ -16,6 +16,7 @@ import ProjectsModule from "./pages/modules/ProjectsModule";
 import ToolsInstrumentsModule from "./pages/modules/ToolsInstrumentsModule";
 import GeneralSettingsPage from "./pages/GeneralSettingsPage";
 import { apiService } from "./services/api";
+import { ToastProvider } from "./contexts/ToastContext";
 import "./index.css";
 
 function App() {
@@ -38,10 +39,19 @@ function App() {
     setIsAuthenticated(true);
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("auth_token");
-    apiService.setToken(null);
-    setIsAuthenticated(false);
+  const handleLogout = async () => {
+    try {
+      // Try to logout on the backend
+      await apiService.logout();
+    } catch (error) {
+      // Even if backend logout fails, we should clear local auth
+      console.warn("Backend logout failed:", error);
+    } finally {
+      // Always clear local authentication state
+      localStorage.removeItem("auth_token");
+      apiService.setToken(null);
+      setIsAuthenticated(false);
+    }
   };
 
   if (loading) {
@@ -53,49 +63,57 @@ function App() {
   }
 
   return (
-    <Router>
-      <div className="App min-h-screen bg-gray-50">
-        <Routes>
-          {/* Public login route (redirect to home if already authenticated) */}
-          <Route
-            path="/login"
-            element={
-              isAuthenticated ? (
-                <Navigate to="/" replace />
-              ) : (
-                <Login onLogin={handleLogin} />
-              )
-            }
-          />
-          {/* Protected dashboard routes */}
-          <Route
-            path="/*"
-            element={
-              isAuthenticated ? (
-                <Dashboard onLogout={handleLogout} />
-              ) : (
-                <Navigate to="/login" replace />
-              )
-            }
-          >
-            <Route index element={<Navigate to="pdf-creator" replace />} />
-            <Route path="pdf-creator" element={<PDFCreator />} />
-            <Route path="modules/about-us" element={<AboutUsModule />} />
-            <Route path="modules/our-staff" element={<OurStaffModule />} />
-            <Route path="modules/key-clients" element={<KeyClientsModule />} />
-            <Route path="modules/services" element={<ServicesModule />} />
-            <Route path="modules/projects" element={<ProjectsModule />} />
+    <ToastProvider>
+      <Router>
+        <div className="App min-h-screen bg-gray-50">
+          <Routes>
+            {/* Public login route (redirect to home if already authenticated) */}
             <Route
-              path="modules/tools-instruments"
-              element={<ToolsInstrumentsModule />}
+              path="/login"
+              element={
+                isAuthenticated ? (
+                  <Navigate to="/" replace />
+                ) : (
+                  <Login onLogin={handleLogin} />
+                )
+              }
             />
-            <Route path="general-settings" element={<GeneralSettingsPage />} />
-          </Route>
-          {/* Redirect any unknown paths */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </div>
-    </Router>
+            {/* Protected dashboard routes */}
+            <Route
+              path="/*"
+              element={
+                isAuthenticated ? (
+                  <Dashboard onLogout={handleLogout} />
+                ) : (
+                  <Navigate to="/login" replace />
+                )
+              }
+            >
+              <Route index element={<Navigate to="pdf-creator" replace />} />
+              <Route path="pdf-creator" element={<PDFCreator />} />
+              <Route path="modules/about-us" element={<AboutUsModule />} />
+              <Route path="modules/our-staff" element={<OurStaffModule />} />
+              <Route
+                path="modules/key-clients"
+                element={<KeyClientsModule />}
+              />
+              <Route path="modules/services" element={<ServicesModule />} />
+              <Route path="modules/projects" element={<ProjectsModule />} />
+              <Route
+                path="modules/tools-instruments"
+                element={<ToolsInstrumentsModule />}
+              />
+              <Route
+                path="general-settings"
+                element={<GeneralSettingsPage />}
+              />
+            </Route>
+            {/* Redirect any unknown paths */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </div>
+      </Router>
+    </ToastProvider>
   );
 }
 
