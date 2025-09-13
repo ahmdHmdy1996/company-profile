@@ -5,11 +5,39 @@ import { apiService } from "../services/api";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 
+// Function to parse JSON-encoded HTML fields
+const parseJsonHtml = (jsonString) => {
+  if (!jsonString) return null;
+
+  // If it's already an object/parsed, return it
+  if (typeof jsonString === "object" && jsonString.html) {
+    return jsonString.html;
+  }
+
+  // If it's a string, try to parse it
+  if (typeof jsonString === "string") {
+    try {
+      const parsed = JSON.parse(jsonString);
+      return parsed.html || jsonString;
+    } catch (error) {
+      console.warn("Failed to parse JSON HTML:", error);
+      // If parsing fails, return the original string (might be plain HTML)
+      return jsonString;
+    }
+  }
+
+  return null;
+};
+
 // Function to process header HTML with page title replacement
 const processHeaderWithPageTitle = (headerHtml, pageTitle) => {
   if (!headerHtml) return headerHtml;
 
-  let processedHeader = processApiHtml(headerHtml);
+  // First parse the JSON to get the HTML content
+  const parsedHtml = parseJsonHtml(headerHtml);
+  if (!parsedHtml) return headerHtml;
+
+  let processedHeader = processApiHtml(parsedHtml);
 
   // Replace various forms of "our project" with the page title
   if (pageTitle) {
@@ -29,7 +57,11 @@ const processHeaderWithPageTitle = (headerHtml, pageTitle) => {
 const processHeaderWithPageTitleForDownload = async (headerHtml, pageTitle) => {
   if (!headerHtml) return headerHtml;
 
-  let processedHeader = await processApiHtmlForDownload(headerHtml);
+  // First parse the JSON to get the HTML content
+  const parsedHtml = parseJsonHtml(headerHtml);
+  if (!parsedHtml) return headerHtml;
+
+  let processedHeader = await processApiHtmlForDownload(parsedHtml);
 
   // Replace various forms of "our project" with the page title
   if (pageTitle) {
@@ -304,8 +336,9 @@ const PDFViewer = ({ isVisible, pdfData, pdfName }) => {
 
             // Add footer
             if (page.has_footer && pdfData.footer) {
+              const parsedFooterHtml = parseJsonHtml(pdfData.footer);
               const footerContent = await processApiHtmlForDownload(
-                pdfData.footer
+                parsedFooterHtml
               );
               const footerDiv = document.createElement("div");
               footerDiv.innerHTML = footerContent.replace(
@@ -502,7 +535,9 @@ const PDFViewer = ({ isVisible, pdfData, pdfName }) => {
                     <div
                       className="w-full flex-shrink-0"
                       dangerouslySetInnerHTML={{
-                        __html: processApiHtml(pdfData.footer).replace(
+                        __html: processApiHtml(
+                          parseJsonHtml(pdfData.footer)
+                        ).replace(
                           /<!-- سيتم ملؤه بالسكربت -->/g,
                           `${pageIndex + 1} / ${pdfData.pages.length}`
                         ),

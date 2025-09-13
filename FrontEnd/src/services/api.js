@@ -201,7 +201,93 @@ class ApiService {
   }
 
   async updatePDF(id, pdfData) {
-    return await this.axiosInstance.put(`/pdfs/${id}`, pdfData);
+    try {
+      let response;
+
+      if (pdfData instanceof FormData) {
+        // For FormData with file uploads, use POST with _method: PUT
+        pdfData.append("_method", "PUT");
+        response = await this.axiosInstance.post(`/pdfs/${id}`, pdfData);
+      } else {
+        // For regular objects, send as JSON with PUT
+        response = await this.axiosInstance.put(`/pdfs/${id}`, pdfData);
+      }
+
+      return response;
+    } catch (error) {
+      console.error("Update PDF error:", error);
+      throw error;
+    }
+  }
+
+  // Multi-step PDF creation methods
+  async createPDFBasic(name) {
+    try {
+      const response = await this.axiosInstance.post("/pdfs", { name });
+      return response;
+    } catch (error) {
+      if (this.toastCallbacks?.showError) {
+        this.toastCallbacks.showError(
+          error.message || "حدث خطأ أثناء إنشاء ملف PDF الأساسي"
+        );
+      }
+      throw error;
+    }
+  }
+
+  async updatePDFHeaderFooter(id, headerHtml, footerHtml) {
+    try {
+      const updateData = {};
+
+      if (headerHtml && headerHtml.trim()) {
+        updateData.header = JSON.stringify({ html: headerHtml });
+      }
+
+      if (footerHtml && footerHtml.trim()) {
+        updateData.footer = JSON.stringify({ html: footerHtml });
+      }
+
+      const response = await this.axiosInstance.put(`/pdfs/${id}`, updateData);
+      return response;
+    } catch (error) {
+      if (this.toastCallbacks?.showError) {
+        this.toastCallbacks.showError(
+          error.message || "حدث خطأ أثناء تحديث الرأسية والتذييل"
+        );
+      }
+      throw error;
+    }
+  }
+
+  async updatePDFCoverAndBackground(id, coverHtml, backgroundImage) {
+    try {
+      const formData = new FormData();
+
+      if (coverHtml && coverHtml.trim()) {
+        formData.append("cover", JSON.stringify({ html: coverHtml }));
+      }
+
+      if (backgroundImage && backgroundImage.file) {
+        formData.append("background_image", backgroundImage.file);
+      }
+
+      // Only make request if we have data to send
+      if (formData.has("cover") || formData.has("background_image")) {
+        // Add _method for Laravel to handle as PUT request
+        formData.append("_method", "PUT");
+        const response = await this.axiosInstance.post(`/pdfs/${id}`, formData);
+        return response;
+      }
+
+      return { status: true, message: "No cover or background to update" };
+    } catch (error) {
+      if (this.toastCallbacks?.showError) {
+        this.toastCallbacks.showError(
+          error.message || "حدث خطأ أثناء تحديث الغلاف والخلفية"
+        );
+      }
+      throw error;
+    }
   }
 
   async deletePDF(id) {

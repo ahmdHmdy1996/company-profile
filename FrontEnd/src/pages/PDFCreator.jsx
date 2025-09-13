@@ -6,9 +6,6 @@ import BackgroundImageUploader from "../components/BackgroundImageUploader";
 import { apiService } from "../services/api";
 import { usePDFViewer } from "../contexts/PDFViewerContext.js";
 import { useApiToast } from "../hooks/useApiToast";
-import { processApiHtmlForDownload } from "../utils/htmlUtils";
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
 
 const PDFCreator = () => {
   const { showPDF, pdfViewer } = usePDFViewer();
@@ -22,28 +19,7 @@ const PDFCreator = () => {
   }, [showPDF, pdfViewer.isVisible]);
 
   // Test function for PDF viewer
-  const testPDFViewer = () => {
-    const testPdfData = {
-      id: "test",
-      name: "اختبار عارض PDF",
-      cover: `<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 80px 40px; text-align: center; min-height: 500px; display: flex; flex-direction: column; justify-content: center;">
-        <div style="max-width: 400px; margin: 0 auto;">
-          <h1 style="margin: 0 0 40px 0; font-size: 48px; font-weight: bold; line-height: 1.2;">شركة المستقبل</h1>
-          <div style="width: 80px; height: 2px; background: white; margin: 0 auto 40px auto;"></div>
-          <h2 style="margin: 0 0 60px 0; font-size: 24px; font-weight: 400;">التقرير السنوي 2024</h2>
-          <p style="margin: 0; font-size: 16px; opacity: 0.9;">الإنجازات والتطلعات</p>
-        </div>
-      </div>`,
-      header: `<div style="background: #2c3e50; color: white; padding: 20px; text-align: center;">
-        <h1 style="margin: 0; font-size: 24px; font-weight: bold;">شركة المستقبل - التقرير السنوي 2024</h1>
-      </div>`,
-      footer: `<div style="background: #34495e; color: white; padding: 15px; text-align: center; font-size: 14px;">
-        <p style="margin: 0;">© 2024 شركة المستقبل - جميع الحقوق محفوظة</p>
-      </div>`,
-      pages: [],
-    };
-    showPDF(testPdfData, "اختبار عارض PDF");
-  };
+
   const [pdfData, setPdfData] = useState({
     name: "",
     header_design: "template1",
@@ -58,6 +34,12 @@ const PDFCreator = () => {
   const [loadingPDFs, setLoadingPDFs] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [creationProgress, setCreationProgress] = useState({
+    step: 0,
+    total: 3,
+    message: "",
+  });
 
   useEffect(() => {
     // Check if user is already authenticated
@@ -93,7 +75,7 @@ const PDFCreator = () => {
       } else {
         setExistingPDFs([]);
       }
-    } catch (error) {
+    } catch {
       // Error is already handled by API service with toast
       setExistingPDFs([]);
     } finally {
@@ -129,91 +111,6 @@ const PDFCreator = () => {
     } catch (error) {
       console.error("Error viewing PDF:", error);
       toast.showError("خطأ في عرض ملف PDF");
-    }
-  };
-
-  const handleDownloadPDF = async (pdfId, pdfName) => {
-    try {
-      // Find the PDF data from existing PDFs
-      const selectedPdf = existingPDFs.find((pdf) => pdf.id === pdfId);
-      if (selectedPdf) {
-        // Process cover content with base64 images
-        const coverContent = selectedPdf.cover
-          ? typeof selectedPdf.cover === "string"
-            ? selectedPdf.cover
-            : JSON.parse(selectedPdf.cover)
-          : "";
-        const processedCoverContent = coverContent
-          ? await processApiHtmlForDownload(coverContent)
-          : "";
-
-        // Create a temporary div to render the HTML content
-        const tempDiv = document.createElement("div");
-        tempDiv.innerHTML = processedCoverContent;
-        tempDiv.style.cssText = `
-          font-family: Arial, sans-serif;
-          direction: rtl;
-          padding: 20px;
-          background: white;
-          width: 210mm;
-          min-height: 297mm;
-          margin: 0;
-          box-sizing: border-box;
-        `;
-
-        // Add background image if exists
-        if (selectedPdf.background_image) {
-          tempDiv.style.backgroundImage = `url(${selectedPdf.background_image})`;
-          tempDiv.style.backgroundSize = "cover";
-          tempDiv.style.backgroundPosition = "center";
-          tempDiv.style.backgroundRepeat = "no-repeat";
-        }
-
-        document.body.appendChild(tempDiv);
-
-        // Create PDF using html2canvas + jsPDF
-        const canvas = await html2canvas(tempDiv, {
-          scale: 2,
-          useCORS: true,
-          allowTaint: true,
-          backgroundColor: "#ffffff",
-          width: tempDiv.scrollWidth,
-          height: tempDiv.scrollHeight,
-        });
-
-        const imgData = canvas.toDataURL("image/png");
-        const pdf = new jsPDF({
-          orientation: "portrait",
-          unit: "mm",
-          format: "a4",
-        });
-
-        const imgWidth = 210;
-        const pageHeight = 295;
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
-        let heightLeft = imgHeight;
-        let position = 0;
-
-        pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-
-        while (heightLeft >= 0) {
-          position = heightLeft - imgHeight;
-          pdf.addPage();
-          pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-          heightLeft -= pageHeight;
-        }
-
-        pdf.save((pdfName || `pdf_${pdfId}`) + ".pdf");
-
-        // Clean up
-        document.body.removeChild(tempDiv);
-      } else {
-        alert("لم يتم العثور على ملف PDF");
-      }
-    } catch (error) {
-      console.error("Error downloading PDF:", error);
-      alert("خطأ في تحميل ملف PDF");
     }
   };
 
@@ -282,26 +179,51 @@ const PDFCreator = () => {
     }
 
     try {
-      if (pdfData.background_image) {
-        const formData = new FormData();
-        formData.append("name", pdfData.name);
-        formData.append("header", JSON.stringify({ html: pdfData.header_html }));
-        formData.append("footer", JSON.stringify({ html: pdfData.footer_html }));
-        formData.append("cover", JSON.stringify({ html: pdfData.cover_html }));
-        formData.append("background_image", pdfData.background_image.file);
+      setIsCreating(true);
 
-        await apiService.createPDF(formData);
-      } else {
-        const jsonData = {
-          name: pdfData.name,
-          header: pdfData.header_html,
-          footer: pdfData.footer_html,
-          cover: pdfData.cover_html,
-        };
-        await apiService.createPDF(jsonData);
+      // Step 1: Create PDF with basic info
+      setCreationProgress({
+        step: 1,
+        total: 3,
+        message: "إنشاء ملف PDF الأساسي...",
+      });
+
+      const createResponse = await apiService.createPDFBasic(pdfData.name);
+      if (!createResponse.status || !createResponse.data?.id) {
+        throw new Error("فشل في إنشاء ملف PDF الأساسي");
       }
 
+      const pdfId = createResponse.data.id;
+
+      // Step 2: Add header and footer
+      setCreationProgress({
+        step: 2,
+        total: 3,
+        message: "إضافة الرأسية والتذييل...",
+      });
+
+      await apiService.updatePDFHeaderFooter(
+        pdfId,
+        pdfData.header_html,
+        pdfData.footer_html
+      );
+
+      // Step 3: Add cover and background image (if any)
+      setCreationProgress({
+        step: 3,
+        total: 3,
+        message: "إضافة الغلاف والخلفية...",
+      });
+
+      await apiService.updatePDFCoverAndBackground(
+        pdfId,
+        pdfData.cover_html,
+        pdfData.background_image
+      );
+
       toast.showSuccess("تم إنشاء ملف PDF بنجاح!");
+
+      // Reset form data
       setPdfData({
         name: "",
         header_design: "template1",
@@ -312,10 +234,19 @@ const PDFCreator = () => {
         cover_html: "",
         background_image: null,
       });
+
+      // Reload existing PDFs
       loadExistingPDFs();
     } catch (error) {
       console.error("Error creating PDF:", error);
-      toast.showError("خطأ في إنشاء ملف PDF");
+      toast.showError(error.message || "خطأ في إنشاء ملف PDF");
+    } finally {
+      setIsCreating(false);
+      setCreationProgress({
+        step: 0,
+        total: 3,
+        message: "",
+      });
     }
   };
 
@@ -335,7 +266,6 @@ const PDFCreator = () => {
               {isLoggingIn ? "جاري تسجيل الدخول..." : "تسجيل الدخول للاختبار"}
             </button>
           )}
-         
         </div>
 
         <div className="space-y-6">
@@ -459,13 +389,74 @@ const PDFCreator = () => {
 
               {/* Create Button */}
               <div className="flex justify-center pt-4">
-                <button
-                  onClick={handleCreatePDF}
-                  disabled={!pdfData.name}
-                  className="px-6 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-                >
-                  إنشاء ملف PDF
-                </button>
+                <div className="w-full max-w-md">
+                  {/* Progress indicator */}
+                  {isCreating && (
+                    <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-blue-700">
+                          الخطوة {creationProgress.step} من{" "}
+                          {creationProgress.total}
+                        </span>
+                        <span className="text-sm text-blue-600">
+                          {Math.round(
+                            (creationProgress.step / creationProgress.total) *
+                              100
+                          )}
+                          %
+                        </span>
+                      </div>
+                      <div className="w-full bg-blue-200 rounded-full h-2 mb-2">
+                        <div
+                          className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                          style={{
+                            width: `${
+                              (creationProgress.step / creationProgress.total) *
+                              100
+                            }%`,
+                          }}
+                        ></div>
+                      </div>
+                      <p className="text-sm text-blue-600 text-center">
+                        {creationProgress.message}
+                      </p>
+                    </div>
+                  )}
+
+                  <button
+                    onClick={handleCreatePDF}
+                    disabled={!pdfData.name || isCreating}
+                    className="w-full px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                  >
+                    {isCreating ? (
+                      <>
+                        <svg
+                          className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        جاري الإنشاء...
+                      </>
+                    ) : (
+                      "إنشاء ملف PDF"
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
