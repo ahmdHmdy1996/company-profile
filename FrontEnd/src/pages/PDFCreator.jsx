@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Eye, Edit, Trash2 } from "lucide-react";
 import HeaderDesignTemplates from "../components/HeaderDesignTemplates";
 import FooterDesignTemplates from "../components/FooterDesignTemplates";
 import CoverDesignTemplates from "../components/CoverDesignTemplates";
@@ -8,17 +10,11 @@ import { usePDFViewer } from "../contexts/PDFViewerContext.js";
 import { useApiToast } from "../hooks/useApiToast";
 
 const PDFCreator = () => {
-  const { showPDF, pdfViewer } = usePDFViewer();
+  const { showPDF } = usePDFViewer();
+  const navigate = useNavigate();
   const toast = useApiToast(); // Initialize API toast integration
 
-  // Auto-show PDF viewer on component mount
-  useEffect(() => {
-    if (!pdfViewer.isVisible) {
-      showPDF(null, null); // Show viewer with "choose PDF" message
-    }
-  }, [showPDF, pdfViewer.isVisible]);
-
-  // Test function for PDF viewer
+  // Removed auto-show PDF viewer functionality - users can manually open it when needed
 
   const [pdfData, setPdfData] = useState({
     name: "",
@@ -129,6 +125,10 @@ const PDFCreator = () => {
         toast.showError("خطأ في حذف الملف");
       }
     }
+  };
+
+  const handleEditPDF = (pdfId) => {
+    navigate(`/pdf-editor/${pdfId}`);
   };
 
   const handleInputChange = (field, value) => {
@@ -251,7 +251,7 @@ const PDFCreator = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="min-h-screen  ">
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-800">
@@ -270,7 +270,7 @@ const PDFCreator = () => {
 
         <div className="space-y-6">
           {/* Existing PDFs Section */}
-          <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="bg-white rounded-lg  p-6">
             <h2 className="text-2xl font-semibold text-gray-800 mb-6">
               ملفات PDF الموجودة
             </h2>
@@ -284,44 +284,79 @@ const PDFCreator = () => {
                 لا توجد ملفات PDF
               </p>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {existingPDFs.map((pdf) => (
-                  <div
-                    key={pdf.id}
-                    className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
-                  >
-                    <div className="space-y-3">
-                      <h3 className="font-medium text-gray-800">{pdf.name}</h3>
-                      <p className="text-sm text-gray-500">ID: {pdf.id}</p>
-                      <p className="text-sm text-gray-500">
-                        تاريخ الإنشاء:{" "}
-                        {new Date(pdf.created_at).toLocaleDateString("ar-SA")}
-                      </p>
+              <div className="overflow-x-auto">
+                <table className="min-w-full bg-white border border-gray-200 rounded-lg">
+                  <thead className="bg-gray-100">
+                    <tr>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        اسم الملف
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        المعرف
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        تاريخ الإنشاء
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        الإجراءات
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {existingPDFs.map((pdf) => (
+                      <tr key={pdf.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900">
+                            {pdf.name}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-500">{pdf.id}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-500">
+                            {new Date(pdf.created_at).toLocaleDateString(
+                              "ar-SA"
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleViewPDF(pdf.id, pdf.name)}
+                              className="p-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors flex items-center justify-center"
+                              title="عرض"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
 
-                      <div className="flex gap-2 pt-2">
-                        <button
-                          onClick={() => handleViewPDF(pdf.id, pdf.name)}
-                          className="px-3 py-2 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 transition-colors"
-                        >
-                          عرض
-                        </button>
+                            <button
+                              onClick={() => handleEditPDF(pdf.id)}
+                              className="p-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors flex items-center justify-center"
+                              title="تحرير"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
 
-                        <button
-                          onClick={() => handleDeletePDF(pdf.id)}
-                          className="px-3 py-2 bg-red-500 text-white text-sm rounded hover:bg-red-600 transition-colors"
-                        >
-                          حذف
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                            <button
+                              onClick={() => handleDeletePDF(pdf.id)}
+                              className="p-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors flex items-center justify-center"
+                              title="حذف"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
           </div>
 
           {/* Create New PDF Section */}
-          <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="bg-white rounded-lg p-6">
             <h2 className="text-2xl font-semibold text-gray-800 mb-6">
               إنشاء ملف PDF جديد
             </h2>

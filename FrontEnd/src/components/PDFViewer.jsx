@@ -79,32 +79,17 @@ const processHeaderWithPageTitleForDownload = async (headerHtml, pageTitle) => {
 
 // Utility function to convert background image path to proper URL
 const getImageUrl = (imagePath, pdfData) => {
-  if (!imagePath) return null;
-
-  // If pdfData has background_image_url, use it directly
-  if (pdfData?.background_image_url) {
-    return pdfData.background_image_url;
-  }
-
-  // If it's already a full URL, return as is
-  if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) {
-    return imagePath;
-  }
-
-  // If it's a local file path (like C:\xampp\tmp\phpXXX.tmp),
-  // we need to convert it to a proper backend URL
-  if (imagePath.includes("\\") || imagePath.includes("tmp")) {
-    // Extract filename if it's a full path
-    const filename = imagePath.split("\\").pop();
-    // Return the backend storage URL (adjust this URL based on your backend setup)
-    return `http://localhost:8000/storage/background_images/${filename}`;
-  }
-
-  // If it's a relative path, prepend the backend URL
-  return `http://localhost:8000/storage/${imagePath}`;
+  return `https://backend-company-profile.codgoo.com/storage${pdfData.background_image}`;
 };
 
-const PDFViewer = ({ isVisible, pdfData, pdfName }) => {
+const PDFViewer = ({
+  isVisible,
+  pdfData,
+  pdfName,
+  onClose,
+  onToggle,
+  isLargeScreen,
+}) => {
   const [isLoading, setIsLoading] = useState(false);
   const [pageSections, setPageSections] = useState({});
   const [loadingSections, setLoadingSections] = useState(false);
@@ -298,28 +283,47 @@ const PDFViewer = ({ isVisible, pdfData, pdfName }) => {
 
             // Add sections
             for (const section of sections) {
-              // Parse the section data if it's a JSON string
-              let sectionData = section;
-              if (typeof section.data === "string") {
+              // The section.data field contains the actual content
+              // It should be an object with the HTML content
+              let htmlContent = "";
+
+              if (section.data && typeof section.data === "object") {
+                // If data is an object, try to get HTML from common properties
+                htmlContent =
+                  section.data.htmlCode ||
+                  section.data.content ||
+                  section.data.html ||
+                  section.data.body ||
+                  section.data.text ||
+                  "";
+              } else if (typeof section.data === "string") {
                 try {
-                  sectionData = {
-                    ...section,
-                    ...JSON.parse(section.data),
-                  };
+                  // If data is a JSON string, parse it first
+                  const parsedData = JSON.parse(section.data);
+                  htmlContent =
+                    parsedData.htmlCode ||
+                    parsedData.content ||
+                    parsedData.html ||
+                    parsedData.body ||
+                    parsedData.text ||
+                    "";
                 } catch (error) {
-                  console.error("Error parsing section data:", error);
-                  sectionData = section;
+                  console.error("Error parsing section.data:", error);
+                  // If parsing fails, treat it as plain HTML
+                  htmlContent = section.data || "";
                 }
               }
 
-              // Get the HTML content from various possible sources
-              const htmlContent =
-                sectionData.htmlCode ||
-                sectionData.content ||
-                sectionData.html ||
-                section.content ||
-                section.html ||
-                "";
+              // Fallback to direct properties if data field doesn't contain content
+              if (!htmlContent) {
+                htmlContent =
+                  section.htmlCode ||
+                  section.content ||
+                  section.html ||
+                  section.body ||
+                  section.text ||
+                  "";
+              }
 
               if (htmlContent) {
                 const sectionContent = await processApiHtmlForDownload(
@@ -381,8 +385,18 @@ const PDFViewer = ({ isVisible, pdfData, pdfName }) => {
     }
   };
 
+  if (!isVisible) {
+    return null;
+  }
+
   return (
-    <div className="fixed left-0 top-0 h-full w-[40rem] bg-white border-r border-gray-200 z-50">
+    <div
+      className={`${
+        isLargeScreen
+          ? "fixed end-0 top-0 h-full w-[36rem] bg-white border-l border-gray-200 z-50 transform transition-transform duration-300 translate-x-0"
+          : "fixed inset-0 bg-white z-50"
+      }`}
+    >
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
         <div className="flex items-center space-x-2 rtl:space-x-reverse">
@@ -405,6 +419,16 @@ const PDFViewer = ({ isVisible, pdfData, pdfName }) => {
               ) : (
                 <Download className="w-4 h-4" />
               )}
+            </button>
+          )}
+          {/* Close button - only show on small screens or when toggle is available */}
+          {(!isLargeScreen || onToggle) && (
+            <button
+              onClick={onClose || onToggle || (() => {})}
+              className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+              title="إغلاق"
+            >
+              <X className="w-4 h-4" />
             </button>
           )}
         </div>
@@ -486,31 +510,53 @@ const PDFViewer = ({ isVisible, pdfData, pdfName }) => {
                       pageSections[page.id].length > 0 ? (
                       <div className="space-y-4 h-full overflow-y-auto">
                         {pageSections[page.id].map((section) => {
-                          // Parse the section data if it's a JSON string
-                          let sectionData = section;
-                          if (typeof section.data === "string") {
+                          // The section.data field contains the actual content
+                          // It should be an object with the HTML content
+                          let htmlContent = "";
+
+                          if (
+                            section.data &&
+                            typeof section.data === "object"
+                          ) {
+                            // If data is an object, try to get HTML from common properties
+                            htmlContent =
+                              section.data.htmlCode ||
+                              section.data.content ||
+                              section.data.html ||
+                              section.data.body ||
+                              section.data.text ||
+                              "";
+                          } else if (typeof section.data === "string") {
                             try {
-                              sectionData = {
-                                ...section,
-                                ...JSON.parse(section.data),
-                              };
+                              // If data is a JSON string, parse it first
+                              const parsedData = JSON.parse(section.data);
+                              htmlContent =
+                                parsedData.htmlCode ||
+                                parsedData.content ||
+                                parsedData.html ||
+                                parsedData.body ||
+                                parsedData.text ||
+                                "";
                             } catch (error) {
                               console.error(
-                                "Error parsing section data:",
+                                "View - Error parsing section.data:",
                                 error
                               );
-                              sectionData = section;
+                              // If parsing fails, treat it as plain HTML
+                              htmlContent = section.data || "";
                             }
                           }
 
-                          // Get the HTML content from various possible sources
-                          const htmlContent =
-                            sectionData.htmlCode ||
-                            sectionData.content ||
-                            sectionData.html ||
-                            section.content ||
-                            section.html ||
-                            "";
+                          // Fallback to direct properties if data field doesn't contain content
+                          if (!htmlContent) {
+                            htmlContent =
+                              section.htmlCode ||
+                              section.content ||
+                              section.html ||
+                              section.body ||
+                              section.text ||
+                              "";
+                          }
 
                           return (
                             <div
