@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('pages', function (Blueprint $table) {
             $table->id();
             $table->foreignId('pdf_id')->constrained('pdfs')->onDelete('cascade');
-            $table->foreignId('has_header')->constrained('pdfs')->onDelete('cascade');
-            $table->foreignId('has_footer')->constrained('pdfs')->onDelete('cascade');
+            $table->boolean('has_header')->default(false);
+            $table->boolean('has_footer')->default(false);
             $table->string('title');
             $table->integer('order')->default(0);
             $table->timestamps();

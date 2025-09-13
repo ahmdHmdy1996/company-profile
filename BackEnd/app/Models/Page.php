@@ -31,8 +31,8 @@ class Page extends Model
      */
     protected $casts = [
         'order' => 'integer',
-        'has_header' => 'integer',
-        'has_footer' => 'integer',
+        'has_header' => 'boolean',
+        'has_footer' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
