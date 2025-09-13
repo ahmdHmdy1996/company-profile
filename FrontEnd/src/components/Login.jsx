@@ -32,7 +32,6 @@ const Login = ({ onLogin }) => {
         apiService.setToken(MOCK_TOKEN);
         onLogin(MOCK_TOKEN);
       } else {
-        // Try to authenticate with backend
         const response = await fetch(
           "https://backend-company-profile.codgoo.com/api/login",
           {
@@ -46,8 +45,6 @@ const Login = ({ onLogin }) => {
         );
 
         const data = await response.json();
-console.log(data);
-
         if (response.ok) {
           apiService.setToken(data.token);
           onLogin(data.token);
@@ -56,7 +53,6 @@ console.log(data);
         }
       }
     } catch (err) {
-      // If backend is not available, check demo credentials
       if (
         credentials.email === DEFAULT_CREDENTIALS.email &&
         credentials.password === DEFAULT_CREDENTIALS.password
