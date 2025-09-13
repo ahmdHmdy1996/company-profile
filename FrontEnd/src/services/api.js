@@ -1,281 +1,422 @@
-const API_BASE_URL = 'https://backend-company-profile.codgoo.com/api';
+import axios from "axios";
+
+// Use proxy in development, direct URL in production
+const API_BASE_URL = import.meta.env.DEV
+  ? "/api" // This will be proxied to the backend by Vite
+  : "https://backend-company-profile.codgoo.com/api";
 
 class ApiService {
   constructor() {
     this.baseURL = API_BASE_URL;
-    this.token = localStorage.getItem('auth_token') || null;
+    this.token = localStorage.getItem("auth_token") || null;
+    this.onUnauthorized = null; // Callback for 401 errors
+    this.toastCallbacks = null; // Toast callbacks for showing messages
+
+    // Create axios instance
+    this.axiosInstance = axios.create({
+      baseURL: this.baseURL,
+      timeout: 30000, // 30 seconds timeout
+      withCredentials: false, // Don't send cookies with requests
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+    });
+
+    // Add request interceptor
+    this.axiosInstance.interceptors.request.use(
+      (config) => {
+        // Add auth token if available
+        if (this.token) {
+          config.headers.Authorization = `Bearer ${this.token}`;
+        }
+
+        // Always ensure Accept header is set
+        config.headers.Accept = "application/json";
+
+        // For FormData requests, remove Content-Type to let browser set it with boundary
+        if (config.data instanceof FormData) {
+          delete config.headers["Content-Type"];
+        } else {
+          // For non-FormData requests, ensure Content-Type is application/json
+          config.headers["Content-Type"] = "application/json";
+        }
+
+        // Debug: Log the final request headers
+        console.log("Request URL:", config.url);
+        console.log("Request Headers:", config.headers);
+        console.log("Full config:", config);
+
+        return config;
+      },
+      (error) => {
+        return Promise.reject(error);
+      }
+    );
+
+    // Add response interceptor
+    this.axiosInstance.interceptors.response.use(
+      (response) => {
+        return response.data; // Return only the data part
+      },
+      (error) => {
+        // Enhanced error logging
+        console.error("API request failed:", error);
+        console.error("Error details:", {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data,
+          headers: error.response?.headers,
+          url: error.config?.url,
+          method: error.config?.method,
+          requestHeaders: error.config?.headers,
+        });
+
+        // Handle 401 unauthorized errors
+        if (error.response?.status === 401 && this.onUnauthorized) {
+          this.onUnauthorized();
+        }
+
+        // Create a more user-friendly error message
+        let errorMessage = "حدث خطأ غير متوقع";
+
+        if (error.response?.data?.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.response?.statusText) {
+          errorMessage = error.response.statusText;
+        } else if (error.message) {
+          if (
+            error.code === "ECONNABORTED" ||
+            error.message.includes("timeout")
+          ) {
+            errorMessage = "انتهت مهلة الاتصال - تحقق من اتصال الإنترنت";
+          } else if (error.message === "Network Error") {
+            errorMessage = "خطأ في الشبكة - تحقق من اتصال الإنترنت";
+          } else {
+            errorMessage = error.message;
+          }
+        }
+
+        const customError = new Error(errorMessage);
+        customError.status = error.response?.status;
+        customError.isNetworkError = !error.response;
+
+        return Promise.reject(customError);
+      }
+    );
+  }
+
+  setToastCallbacks(callbacks) {
+    this.toastCallbacks = callbacks;
+  }
+
+  setUnauthorizedHandler(callback) {
+    this.onUnauthorized = callback;
   }
 
   setToken(token) {
     this.token = token;
-    localStorage.setItem('auth_token', token);
-  }
-
-  getHeaders() {
-    const headers = {
-      
-    };
-    
-    if (this.token) {
-      headers['Authorization'] = `Bearer ${this.token}`;
-    }
-    
-    return headers;
-  }
-
-  getFormHeaders() {
-    const headers = {
-      
-    };
-    
-    if (this.token) {
-      headers['Authorization'] = `Bearer ${this.token}`;
-    }
-    
-    return headers;
-  }
-
-  async request(endpoint, options = {}) {
-    const url = `${this.baseURL}${endpoint}`;
-    const config = {
-      headers: {
-        ...this.getHeaders(),
-        ...options.headers,
-      },
-      ...options,
-    };
-
-    try {
-      const response = await fetch(url, config);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      console.error('API request failed:', error);
-      throw error;
+    if (token) {
+      localStorage.setItem("auth_token", token);
+      // Update the default auth header
+      this.axiosInstance.defaults.headers.common[
+        "Authorization"
+      ] = `Bearer ${token}`;
+    } else {
+      localStorage.removeItem("auth_token");
+      // Remove the auth header
+      delete this.axiosInstance.defaults.headers.common["Authorization"];
     }
   }
 
   // PDF Management
   async createPDF(pdfData) {
-    // Check if pdfData is FormData
-    if (pdfData instanceof FormData) {
-      return this.request('/pdfs', {
-        method: 'POST',
-        headers: this.getFormHeaders(),
-        body: pdfData,
-      });
-    } else {
-      return this.request('/pdfs', {
-        method: 'POST',
-        body: JSON.stringify(pdfData),
-      });
+    try {
+      let response;
+
+      if (pdfData instanceof FormData) {
+        // For FormData, axios will automatically set the correct Content-Type
+        response = await this.axiosInstance.post("/pdfs", pdfData);
+      } else {
+        // For regular objects, send as JSON
+        response = await this.axiosInstance.post("/pdfs", pdfData);
+      }
+
+      // Show success toast if available
+      if (this.toastCallbacks?.showSuccess) {
+        this.toastCallbacks.showSuccess("تم إنشاء ملف PDF بنجاح");
+      }
+
+      return response;
+    } catch (error) {
+      // Show error toast if available
+      if (this.toastCallbacks?.showError) {
+        this.toastCallbacks.showError(
+          error.message || "حدث خطأ أثناء إنشاء ملف PDF"
+        );
+      }
+      throw error;
     }
   }
 
   async getPDFs() {
-    return this.request('/pdfs');
+    try {
+      // Debug: Log the current token and headers
+      console.log("Current token:", this.token);
+      console.log(
+        "Auth header:",
+        this.token ? `Bearer ${this.token}` : "No token"
+      );
+
+      const response = await this.axiosInstance.get("/pdfs");
+
+      // Show success toast if available
+      if (this.toastCallbacks?.showSuccess) {
+        this.toastCallbacks.showSuccess("تم تحميل ملفات PDF بنجاح");
+      }
+
+      return response;
+    } catch (error) {
+      // Enhanced error logging
+      console.error("getPDFs Error Details:", {
+        status: error.status,
+        message: error.message,
+        response: error.response?.data,
+        headers: error.response?.headers,
+        token: this.token ? "Token exists" : "No token",
+      });
+
+      // Show error toast if available
+      if (this.toastCallbacks?.showError) {
+        this.toastCallbacks.showError(
+          error.message || "حدث خطأ أثناء تحميل ملفات PDF"
+        );
+      }
+      throw error;
+    }
   }
 
   async getPDF(id) {
-    return this.request(`/pdfs/${id}`);
+    return await this.axiosInstance.get(`/pdfs/${id}`);
   }
 
   async updatePDF(id, pdfData) {
-    return this.request(`/pdfs/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(pdfData),
-    });
+    return await this.axiosInstance.put(`/pdfs/${id}`, pdfData);
   }
 
   async deletePDF(id) {
-    return this.request(`/pdfs/${id}`, {
-      method: 'DELETE',
-    });
+    try {
+      const response = await this.axiosInstance.delete(`/pdfs/${id}`);
+
+      // Show success toast if available
+      if (this.toastCallbacks?.showSuccess) {
+        this.toastCallbacks.showSuccess("تم حذف ملف PDF بنجاح");
+      }
+
+      return response;
+    } catch (error) {
+      // Show error toast if available
+      if (this.toastCallbacks?.showError) {
+        this.toastCallbacks.showError(
+          error.message || "حدث خطأ أثناء حذف ملف PDF"
+        );
+      }
+      throw error;
+    }
   }
 
   // Generate PDF for viewing
   async generatePDFView(id) {
-    return this.request(`/pdfs/${id}/generate`, {
-      method: 'POST',
-    });
+    return await this.axiosInstance.post(`/pdfs/${id}/generate`);
   }
 
   // Download PDF
   async downloadPDFFile(id) {
-    return this.request(`/pdfs/${id}/download`, {
-      method: 'GET',
-    });
+    return await this.axiosInstance.get(`/pdfs/${id}/download`);
   }
 
   // Page Management
   async createPage(pageData) {
-    return this.request('/pages', {
-      method: 'POST',
-      body: JSON.stringify(pageData),
-    });
+    return await this.axiosInstance.post("/pages", pageData);
   }
 
   async getPages(pdfId = null) {
-    const endpoint = pdfId ? `/pages?pdf_id=${pdfId}` : '/pages';
-    return this.request(endpoint);
+    const endpoint = pdfId ? `/pages?pdf_id=${pdfId}` : "/pages";
+    return await this.axiosInstance.get(endpoint);
   }
 
   async getPage(id) {
-    return this.request(`/pages/${id}`);
+    return await this.axiosInstance.get(`/pages/${id}`);
   }
 
   async updatePage(id, pageData) {
-    return this.request(`/pages/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(pageData),
-    });
+    return await this.axiosInstance.put(`/pages/${id}`, pageData);
   }
 
   async deletePage(id) {
-    return this.request(`/pages/${id}`, {
-      method: 'DELETE',
-    });
+    return await this.axiosInstance.delete(`/pages/${id}`);
   }
 
   // Section Management
   async createSection(sectionData) {
-    return this.request('/sections', {
-      method: 'POST',
-      body: JSON.stringify(sectionData),
-    });
+    return await this.axiosInstance.post("/sections", sectionData);
   }
 
   async getSections(pageId = null) {
-    const endpoint = pageId ? `/sections?page_id=${pageId}` : '/sections';
-    return this.request(endpoint);
+    const endpoint = pageId ? `/sections?page_id=${pageId}` : "/sections";
+    return await this.axiosInstance.get(endpoint);
   }
 
   async getSection(id) {
-    return this.request(`/sections/${id}`);
+    return await this.axiosInstance.get(`/sections/${id}`);
   }
 
   async updateSection(id, sectionData) {
-    return this.request(`/sections/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(sectionData),
-    });
+    return await this.axiosInstance.put(`/sections/${id}`, sectionData);
   }
 
   async deleteSection(id) {
-    return this.request(`/sections/${id}`, {
-      method: 'DELETE',
-    });
+    return await this.axiosInstance.delete(`/sections/${id}`);
   }
 
   async updateSectionOrder(pageId, sectionsOrder) {
-    return this.request(`/pages/${pageId}/sections/reorder`, {
-      method: 'PUT',
-      body: JSON.stringify({ sections: sectionsOrder }),
+    return await this.axiosInstance.put(`/pages/${pageId}/sections/reorder`, {
+      sections: sectionsOrder,
     });
   }
 
   // Module-specific endpoints
   async getModuleData(moduleType, pageId = null) {
-    const endpoint = pageId 
-      ? `/modules/${moduleType}?page_id=${pageId}` 
+    const endpoint = pageId
+      ? `/modules/${moduleType}?page_id=${pageId}`
       : `/modules/${moduleType}`;
-    return this.request(endpoint);
+    return await this.axiosInstance.get(endpoint);
   }
 
   async saveModuleData(moduleType, data) {
-    return this.request(`/modules/${moduleType}`, {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
+    return await this.axiosInstance.post(`/modules/${moduleType}`, data);
   }
 
   // File Upload
-  async uploadFile(file, type = 'image') {
+  async uploadFile(file, type = "image") {
     const formData = new FormData();
-    formData.append('file', file);
-    formData.append('type', type);
+    formData.append("file", file);
+    formData.append("type", type);
 
-    return this.request('/upload', {
-      method: 'POST',
-      headers: this.getFormHeaders(), // Use form headers for file upload
-      body: formData,
-    });
+    return await this.axiosInstance.post("/upload", formData);
   }
 
   // Design Templates
   async getHeaderDesigns() {
-    return this.request('/designs/headers');
+    return await this.axiosInstance.get("/designs/headers");
   }
 
   async getFooterDesigns() {
-    return this.request('/designs/footers');
+    return await this.axiosInstance.get("/designs/footers");
   }
 
   async getSectionDesigns(moduleType = null) {
-    const endpoint = moduleType 
-      ? `/designs/sections?module=${moduleType}` 
-      : '/designs/sections';
-    return this.request(endpoint);
+    const endpoint = moduleType
+      ? `/designs/sections?module=${moduleType}`
+      : "/designs/sections";
+    return await this.axiosInstance.get(endpoint);
   }
 
   // PDF Generation
   async generatePDF(pdfId) {
-    return this.request(`/pdfs/${pdfId}/generate`, {
-      method: 'POST',
-    });
+    return await this.axiosInstance.post(`/pdfs/${pdfId}/generate`);
   }
 
   async downloadPDF(pdfId) {
     const url = `${this.baseURL}/pdfs/${pdfId}/download`;
-    window.open(url, '_blank');
+    window.open(url, "_blank");
   }
 
   // Statistics and Analytics
   async getStatistics() {
-    return this.request('/statistics');
+    return await this.axiosInstance.get("/statistics");
   }
 
   async getModuleStatistics(moduleType) {
-    return this.request(`/statistics/modules/${moduleType}`);
+    return await this.axiosInstance.get(`/statistics/modules/${moduleType}`);
   }
 
   // Settings Management
   async getSettings() {
-    return this.request('/settings');
+    return await this.axiosInstance.get("/settings");
   }
 
   async createSetting(settingData) {
-    return this.request('/settings', {
-      method: 'POST',
-      body: JSON.stringify(settingData),
-    });
+    return await this.axiosInstance.post("/settings", settingData);
   }
 
   async getSetting(id) {
-    return this.request(`/settings/${id}`);
+    return await this.axiosInstance.get(`/settings/${id}`);
   }
 
   async updateSetting(id, settingData) {
-    return this.request(`/settings/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(settingData),
-    });
+    return await this.axiosInstance.put(`/settings/${id}`, settingData);
   }
 
   async deleteSetting(id) {
-    return this.request(`/settings/${id}`, {
-      method: 'DELETE',
-    });
+    return await this.axiosInstance.delete(`/settings/${id}`);
+  }
+
+  // Authentication methods
+  async login(credentials) {
+    try {
+      const response = await this.axiosInstance.post("/login", credentials);
+
+      // Set the token if login is successful
+      if (response.data && response.data.token) {
+        this.setToken(response.data.token);
+      }
+
+      return response;
+    } catch (error) {
+      console.error("Login failed:", error);
+      throw error;
+    }
+  }
+
+  // Quick test login with demo credentials
+  async testLogin() {
+    const credentials = {
+      email: "admin@company.com",
+      password: "password123",
+    };
+
+    try {
+      const response = await this.login(credentials);
+      console.log("Test login successful:", response);
+      return response;
+    } catch (error) {
+      console.error("Test login failed:", error);
+      throw error;
+    }
+  }
+
+  async register(userData) {
+    return await this.axiosInstance.post("/register", userData);
+  }
+
+  async logout() {
+    return await this.axiosInstance.post("/logout");
+  }
+
+  async getCurrentUser() {
+    return await this.axiosInstance.get("/user");
   }
 }
 
 // Create and export a singleton instance
 const apiService = new ApiService();
+
+// Make it available globally for debugging
+if (typeof window !== "undefined") {
+  window.apiService = apiService;
+}
+
 export { apiService };
 export default apiService;
 
@@ -312,4 +453,8 @@ export const {
   getSetting,
   updateSetting,
   deleteSetting,
+  login,
+  register,
+  logout,
+  getCurrentUser,
 } = apiService;

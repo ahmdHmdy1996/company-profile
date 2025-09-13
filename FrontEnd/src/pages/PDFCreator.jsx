@@ -5,19 +5,21 @@ import CoverDesignTemplates from "../components/CoverDesignTemplates";
 import BackgroundImageUploader from "../components/BackgroundImageUploader";
 import { apiService } from "../services/api";
 import { usePDFViewer } from "../contexts/PDFViewerContext.js";
+import { useApiToast } from "../hooks/useApiToast";
 import { processApiHtmlForDownload } from "../utils/htmlUtils";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 
 const PDFCreator = () => {
   const { showPDF, pdfViewer } = usePDFViewer();
+  const toast = useApiToast(); // Initialize API toast integration
 
   // Auto-show PDF viewer on component mount
   useEffect(() => {
     if (!pdfViewer.isVisible) {
       showPDF(null, null); // Show viewer with "choose PDF" message
     }
-  }, []);
+  }, [showPDF, pdfViewer.isVisible]);
 
   // Test function for PDF viewer
   const testPDFViewer = () => {
@@ -54,10 +56,33 @@ const PDFCreator = () => {
   });
   const [existingPDFs, setExistingPDFs] = useState([]);
   const [loadingPDFs, setLoadingPDFs] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   useEffect(() => {
+    // Check if user is already authenticated
+    const token = localStorage.getItem("auth_token");
+    if (token) {
+      setIsAuthenticated(true);
+    }
     loadExistingPDFs();
   }, []);
+
+  const handleTestLogin = async () => {
+    try {
+      setIsLoggingIn(true);
+      await apiService.testLogin();
+      setIsAuthenticated(true);
+      toast.showSuccess("تم تسجيل الدخول بنجاح!");
+      // Reload PDFs after successful login
+      loadExistingPDFs();
+    } catch (error) {
+      console.error("Login failed:", error);
+      toast.showError("فشل في تسجيل الدخول");
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
 
   const loadExistingPDFs = async () => {
     try {
@@ -66,11 +91,10 @@ const PDFCreator = () => {
       if (response.status) {
         setExistingPDFs(response.data || []);
       } else {
-        console.error("Failed to load PDFs:", response.message);
         setExistingPDFs([]);
       }
     } catch (error) {
-      console.error("Error loading PDFs:", error);
+      // Error is already handled by API service with toast
       setExistingPDFs([]);
     } finally {
       setLoadingPDFs(false);
@@ -100,11 +124,11 @@ const PDFCreator = () => {
         console.log("PDFCreator - Sending pdfData to viewer:", pdfData);
         showPDF(pdfData, pdfName);
       } else {
-        alert("لم يتم العثور على ملف PDF");
+        toast.showError("لم يتم العثور على ملف PDF");
       }
     } catch (error) {
       console.error("Error viewing PDF:", error);
-      alert("خطأ في عرض ملف PDF");
+      toast.showError("خطأ في عرض ملف PDF");
     }
   };
 
@@ -198,14 +222,14 @@ const PDFCreator = () => {
       try {
         const response = await apiService.deletePDF(pdfId);
         if (response.status) {
-          alert("تم حذف الملف بنجاح");
+          toast.showSuccess("تم حذف الملف بنجاح");
           loadExistingPDFs();
         } else {
-          alert("فشل في حذف الملف");
+          toast.showError("فشل في حذف الملف");
         }
       } catch (error) {
         console.error("Error deleting PDF:", error);
-        alert("خطأ في حذف الملف");
+        toast.showError("خطأ في حذف الملف");
       }
     }
   };
@@ -243,17 +267,17 @@ const PDFCreator = () => {
 
   const handleCreatePDF = async () => {
     if (!pdfData.name.trim()) {
-      alert("يرجى إدخال اسم PDF");
+      toast.showWarning("يرجى إدخال اسم PDF");
       return;
     }
 
     if (!pdfData.header_html) {
-      alert("يرجى اختيار تصميم الهيدر");
+      toast.showWarning("يرجى اختيار تصميم الهيدر");
       return;
     }
 
     if (!pdfData.footer_html) {
-      alert("يرجى اختيار تصميم الفوتر");
+      toast.showWarning("يرجى اختيار تصميم الفوتر");
       return;
     }
 
@@ -261,23 +285,23 @@ const PDFCreator = () => {
       if (pdfData.background_image) {
         const formData = new FormData();
         formData.append("name", pdfData.name);
-        formData.append("header", JSON.stringify(pdfData.header_html));
-        formData.append("footer", JSON.stringify(pdfData.footer_html));
-        formData.append("cover", JSON.stringify(pdfData.cover_html));
+        formData.append("header", JSON.stringify({ html: pdfData.header_html }));
+        formData.append("footer", JSON.stringify({ html: pdfData.footer_html }));
+        formData.append("cover", JSON.stringify({ html: pdfData.cover_html }));
         formData.append("background_image", pdfData.background_image.file);
 
         await apiService.createPDF(formData);
       } else {
         const jsonData = {
           name: pdfData.name,
-          header: JSON.stringify(pdfData.header_html),
-          footer: JSON.stringify(pdfData.footer_html),
-          cover: JSON.stringify(pdfData.cover_html),
+          header: pdfData.header_html,
+          footer: pdfData.footer_html,
+          cover: pdfData.cover_html,
         };
         await apiService.createPDF(jsonData);
       }
 
-      alert("تم إنشاء ملف PDF بنجاح!");
+      toast.showSuccess("تم إنشاء ملف PDF بنجاح!");
       setPdfData({
         name: "",
         header_design: "template1",
@@ -291,7 +315,7 @@ const PDFCreator = () => {
       loadExistingPDFs();
     } catch (error) {
       console.error("Error creating PDF:", error);
-      alert("خطأ في إنشاء ملف PDF");
+      toast.showError("خطأ في إنشاء ملف PDF");
     }
   };
 
@@ -302,6 +326,16 @@ const PDFCreator = () => {
           <h1 className="text-3xl font-bold text-gray-800">
             إنشاء وإدارة ملفات PDF
           </h1>
+          {!isAuthenticated && (
+            <button
+              onClick={handleTestLogin}
+              disabled={isLoggingIn}
+              className="px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+            >
+              {isLoggingIn ? "جاري تسجيل الدخول..." : "تسجيل الدخول للاختبار"}
+            </button>
+          )}
+         
         </div>
 
         <div className="space-y-6">
