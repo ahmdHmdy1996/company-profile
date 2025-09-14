@@ -14,6 +14,14 @@ use App\Http\Controllers\Api\AuthController;
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
+// Public Settings API Routes
+Route::prefix('settings')->group(function () {
+    Route::get('/', [SettingController::class, 'index']);
+    Route::post('/', [SettingController::class, 'store']);
+    Route::get('/{id}', [SettingController::class, 'show']);
+    Route::put('/{id}', [SettingController::class, 'update']);
+});
+
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [AuthController::class, 'user']);
@@ -58,14 +66,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/{attachment}', [AttachmentController::class, 'destroy']);
         Route::get('/{attachment}/download', [AttachmentController::class, 'download']);
         Route::post('/reorder', [AttachmentController::class, 'reorder']);
-    });
-
-    // Settings API Routes
-    Route::prefix('settings')->group(function () {
-        Route::get('/', [SettingController::class, 'index']);
-        Route::post('/', [SettingController::class, 'store']);
-        Route::get('/{id}', [SettingController::class, 'show']);
-        Route::put('/{id}', [SettingController::class, 'update']);
     });
 });
 

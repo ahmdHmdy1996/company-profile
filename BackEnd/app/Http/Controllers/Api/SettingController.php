@@ -17,16 +17,7 @@ class SettingController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $query = Setting::query();
-
-        // Filter by category if provided
-        if ($request->has('category')) {
-            $query->where('category', $request->category);
-        }
-
-        $settings = $query->orderBy('category')
-                          ->orderBy('key')
-                          ->get();
+        $settings = Setting::orderBy('id')->get();
 
         return successResponse(
             SettingResource::collection($settings),
