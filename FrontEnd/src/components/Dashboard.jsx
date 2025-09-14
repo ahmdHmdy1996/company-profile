@@ -22,10 +22,22 @@ const Dashboard = ({ onLogout }) => {
     }
   }, [navigate]);
   const [pdfViewer, setPdfViewer] = useState({
-    isVisible: true, // Always visible
+    isVisible: false, // Hidden by default, toggle on click
     pdfData: null,
     pdfName: null,
   });
+
+  const [isLargeScreen, setIsLargeScreen] = useState(window.innerWidth > 1290);
+
+  // Handle window resize for responsive behavior
+  useEffect(() => {
+    const handleResize = () => {
+      setIsLargeScreen(window.innerWidth > 1290);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const showPDF = (pdfData, pdfName) => {
     setPdfViewer({
@@ -36,12 +48,22 @@ const Dashboard = ({ onLogout }) => {
   };
 
   const hidePDF = () => {
-    // PDF viewer is always visible, just clear the data
     setPdfViewer({
-      isVisible: true,
+      isVisible: false,
       pdfData: null,
       pdfName: null,
     });
+  };
+
+  const togglePDF = () => {
+    if (pdfViewer.isVisible) {
+      hidePDF();
+    } else {
+      setPdfViewer((prev) => ({
+        ...prev,
+        isVisible: true,
+      }));
+    }
   };
 
   const menuItems = [
@@ -89,19 +111,25 @@ const Dashboard = ({ onLogout }) => {
   ];
 
   return (
-    <PDFViewerContext.Provider value={{ showPDF, hidePDF, pdfViewer }}>
+    <PDFViewerContext.Provider
+      value={{ showPDF, hidePDF, pdfViewer, togglePDF }}
+    >
       <div className="flex h-screen bg-gray-100">
-        {/* PDF Viewer - Always Visible */}
+        {/* PDF Viewer - Responsive positioning */}
         <PDFViewer
-          isVisible={true}
+          isVisible={pdfViewer.isVisible}
           onClose={hidePDF}
+          onToggle={togglePDF}
           pdfData={pdfViewer.pdfData}
           pdfName={pdfViewer.pdfName}
+          isLargeScreen={isLargeScreen}
         />
 
         {/* Sidebar */}
         <div
-          className={`w-64 py-2 pb-6 bg-white flex flex-col justify-between shadow-lg transition-all duration-300 `}
+          className={`w-64 py-2 pb-6 bg-white flex flex-col justify-between shadow-lg transition-all duration-300 ${
+            isLargeScreen && pdfViewer.isVisible ? "z-40" : ""
+          }`}
         >
           <div className={`p-6 `}>
             <div className="flex justify-between items-center mb-8">
@@ -162,8 +190,68 @@ const Dashboard = ({ onLogout }) => {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 overflow-hidden me-[40rem]">
-          <div className="h-full overflow-y-auto">
+        <div
+          className={`flex-1 overflow-hidden transition-all duration-300 ${
+            isLargeScreen && pdfViewer.isVisible
+              ? "me-[36rem]"
+              : pdfViewer.isVisible && !isLargeScreen
+              ? "hidden" // Hide main content on small screens when PDF is visible
+              : ""
+          }`}
+        >
+          <div className="h-full overflow-y-auto relative">
+            {/* PDF Toggle button for large screens */}
+            {isLargeScreen && (
+              <button
+                onClick={togglePDF}
+                className="fixed top-4 left-4 z-50 bg-blue-600 text-white p-2 rounded-full  hover:bg-blue-700 transition-colors"
+                title={
+                  pdfViewer.isVisible ? "إخفاء عارض PDF" : "إظهار عارض PDF"
+                }
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={1.5}
+                  stroke="currentColor"
+                  className={`w-6 h-6 transition-transform ${
+                    pdfViewer.isVisible ? "rotate-180" : ""
+                  }`}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M19.5 12h-15m0 0l6.75 6.75M4.5 12l6.75-6.75"
+                  />
+                </svg>
+              </button>
+            )}
+
+            {/* Mobile PDF Toggle button */}
+            {!isLargeScreen && !pdfViewer.isVisible && pdfViewer.pdfData && (
+              <button
+                onClick={togglePDF}
+                className="fixed bottom-4 right-4 z-50 bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
+                title="عرض PDF"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={1.5}
+                  stroke="currentColor"
+                  className="w-6 h-6"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
+                  />
+                </svg>
+              </button>
+            )}
+
             <div className="p-8">
               <Outlet />
             </div>
